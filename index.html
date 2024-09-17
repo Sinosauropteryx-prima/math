@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <base href="https://webdemo.myscript.com/views/math/index.html">
+          <meta charset="utf-8">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <link rel="icon" href="/views/math/favicon.ico">
+          <title>math</title>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+          <script defer="" src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
+          <script src="./static/desmos/calculator.js"></script>
+          <style>
+            .editor-logo {
+              display:none !important;
+            }
+            .graph {
+              display:none !important;
+            }
+            .ooo-action-bar {
+              display:flex !important;
+            }
+            #result {
+              height: 35vh !important;
+              width: 70vw !important;
+            }
+            section {
+              display: block !important;
+              height: 100% !important;
+            }
+            header {
+              display: none !important;
+            }
+            .ooo-result-nav li>a {
+              display: inline-block !important;
+              padding: 10px 13px !important;
+              font-size: 13px !important;
+            }
+            .nav-btn>img {
+              margin: auto !important;
+            }
+            .nav-btn.btn-fab-mini {
+              width: 30px !important;
+              height: 30px !important;
+            }
+            aside {
+              position: absolute !important;
+              top: 0 !important;
+              height: 35vh !important;
+              width: 100% !important;
+              visibility: hidden !important;
+            }
+            aside #math-exports {
+              height: 100% !important;
+            }
+            a {
+              cursor: pointer;
+            }
+            #convert {
+              display: none !important;
+            }
+            .forpng {
+              position: fixed;
+              top: calc(35vh + 10px);
+              right: 12px;
+            }
+            .forpng input {
+              height: 36px;
+              border: none;
+              background: #1a9fff;
+              color: white;
+              border-radius: 10px;
+            }
+            #latex-input {
+              width: 30vw;
+              position: fixed;
+              top: 0;
+              right: 0;
+              height: 35vh;
+            }
+            section article {
+              margin-top: 0px !important;
+            }
+          </style>
+          <!--styleいる？-->
+          <link href="/views/math/css/chunk-ec9f24ee.046386b2.css" rel="prefetch">
+          <link href="/views/math/js/chunk-ec9f24ee.3790004f.js" rel="prefetch">
+          <link href="/views/math/css/app.c9a3f838.css" rel="preload" as="style">
+          <link href="/views/math/js/app.a34d9e14.js" rel="preload" as="script">
+          <link href="/views/math/js/chunk-vendors.a78666cf.js" rel="preload" as="script">
+          <link href="/views/math/css/app.c9a3f838.css" rel="stylesheet">
+          <link rel="stylesheet" type="text/css" href="/views/math/css/chunk-ec9f24ee.046386b2.css">
+          <script charset="utf-8" src="/views/math/js/chunk-ec9f24ee.3790004f.js"></script>
+        </head>
+        <body>
+          <div id="app">
+            
+          </div>
+          <div class="forpng">
+            <input type="button" id="process-button" value="copy for PNG">
+          </div>
+          <textarea id="latex-input" rows="10" cols="50" placeholder="Enter LaTeX here..."></textarea>
+          <script src="/views/math/js/chunk-vendors.a78666cf.js"></script>
+          <script>
+            (function(e){function t(t){for(var n,o,a=t[0],c=t[1],l=t[2],d=0,u=[];d<a.length;d++)o=a[d],Object.prototype.hasOwnProperty.call(i,o)&&i[o]&&u.push(i[o][0]),i[o]=0;for(n in c)Object.prototype.hasOwnProperty.call(c,n)&&(e[n]=c[n]);p&&p(t);while(u.length)u.shift()();return s.push.apply(s,l||[]),r()}function r(){for(var e,t=0;t<s.length;t++){for(var r=s[t],n=!0,o=1;o<r.length;o++){var a=r[o];0!==i[a]&&(n=!1)}n&&(s.splice(t--,1),e=c(c.s=r[0]))}return e}var n={},o={app:0},i={app:0},s=[];function a(e){return c.p+"js/"+({}[e]||e)+"."+{"chunk-ec9f24ee":"3790004f"}[e]+".js"}function c(t){if(n[t])return n[t].exports;var r=n[t]={i:t,l:!1,exports:{}};return e[t].call(r.exports,r,r.exports,c),r.l=!0,r.exports}c.e=function(e){var t=[],r={"chunk-ec9f24ee":1};o[e]?t.push(o[e]):0!==o[e]&&r[e]&&t.push(o[e]=new Promise((function(t,r){for(var n="css/"+({}[e]||e)+"."+{"chunk-ec9f24ee":"046386b2"}[e]+".css",i=c.p+n,s=document.getElementsByTagName("link"),a=0;a<s.length;a++){var l=s[a],d=l.getAttribute("data-href")||l.getAttribute("href");if("stylesheet"===l.rel&&(d===n||d===i))return t()}var u=document.getElementsByTagName("style");for(a=0;a<u.length;a++){l=u[a],d=l.getAttribute("data-href");if(d===n||d===i)return t()}var p=document.createElement("link");p.rel="stylesheet",p.type="text/css",p.onload=t,p.onerror=function(t){var n=t&&t.target&&t.target.src||i,s=new Error("Loading CSS chunk "+e+" failed.\n("+n+")");s.code="CSS_CHUNK_LOAD_FAILED",s.request=n,delete o[e],p.parentNode.removeChild(p),r(s)},p.href=i;var h=document.getElementsByTagName("head")[0];h.appendChild(p)})).then((function(){o[e]=0})));var n=i[e];if(0!==n)if(n)t.push(n[2]);else{var s=new Promise((function(t,r){n=i[e]=[t,r]}));t.push(n[2]=s);var l,d=document.createElement("script");d.charset="utf-8",d.timeout=120,c.nc&&d.setAttribute("nonce",c.nc),d.src=a(e);var u=new Error;l=function(t){d.onerror=d.onload=null,clearTimeout(p);var r=i[e];if(0!==r){if(r){var n=t&&("load"===t.type?"missing":t.type),o=t&&t.target&&t.target.src;u.message="Loading chunk "+e+" failed.\n("+n+": "+o+")",u.name="ChunkLoadError",u.type=n,u.request=o,r[1](u)}i[e]=void 0}};var p=setTimeout((function(){l({type:"timeout",target:d})}),12e4);d.onerror=d.onload=l,document.head.appendChild(d)}return Promise.all(t)},c.m=e,c.c=n,c.d=function(e,t,r){c.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:r})},c.r=function(e){"undefined"!==typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},c.t=function(e,t){if(1&t&&(e=c(e)),8&t)return e;if(4&t&&"object"===typeof e&&e&&e.__esModule)return e;var r=Object.create(null);if(c.r(r),Object.defineProperty(r,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var n in e)c.d(r,n,function(t){return e[t]}.bind(null,n));return r},c.n=function(e){var t=e&&e.__esModule?function(){return e["default"]}:function(){return e};return c.d(t,"a",t),t},c.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},c.p="/views/math/",c.oe=function(e){throw console.error(e),e};var l=window["webpackJsonp"]=window["webpackJsonp"]||[],d=l.push.bind(l);l.push=t,l=l.slice();for(var u=0;u<l.length;u++)t(l[u]);var p=d;s.push([0,"chunk-vendors"]),r()})({0:function(e,t,r){e.exports=r("56d7")},"141c":function(e,t,r){e.exports=r.p+"img/undo.59ab4005.svg"},"534f":function(e,t,r){},"56d7":function(e,t,r){"use strict";r.r(t);var n=r("2b0e"),o=function(){var e=this,t=e._self._c;return t("div",{attrs:{id:"app"}},[t("header",[t("a",{staticClass:"ooo-link-back",attrs:{id:"index-header-link",href:"../../"}}),t("h1",{staticClass:"ooo-math"},[e._v("Math")]),t("a",{staticClass:"ooo-link-info",attrs:{id:"info-header-link"},on:{click:function(t){e.showInfo=!0}}}),t("info",{directives:[{name:"show",rawName:"v-show",value:e.showInfo,expression:"showInfo"}],on:{"close-info":function(t){e.showInfo=!1}}})],1),t("section",[t("article",[t("div",{ref:"result",attrs:{id:"result"}}),t("div",[t("nav",[t("div",{staticClass:"button-div"},[t("button",{ref:"clear",staticClass:"nav-btn btn-fab-mini btn-lightBlue",attrs:{id:"clear",disabled:""},on:{click:function(t){return e.editor.clear()}}},[t("img",{attrs:{src:r("b54b")}})]),t("button",{ref:"undo",staticClass:"nav-btn btn-fab-mini btn-lightBlue",attrs:{id:"undo",disabled:""},on:{click:function(t){return e.editor.undo()}}},[t("img",{attrs:{src:r("141c")}})]),t("button",{ref:"redo",staticClass:"nav-btn btn-fab-mini btn-lightBlue",attrs:{id:"redo",disabled:""},on:{click:function(t){return e.editor.redo()}}},[t("img",{attrs:{src:r("74e0")}})])]),t("div",{staticClass:"spacer"}),t("button",{ref:"convert",staticClass:"classic-btn",attrs:{id:"convert",disabled:""},on:{click:function(t){return e.editor.convert()}}},[e._v(" Convert ")])])]),t("div",{staticClass:"write-here"},[e._v("Write here")]),t("div",{ref:"editor",staticClass:"editor",attrs:{"touch-action":"none"},on:{exported:function(t){return e.exported(t)},changed:function(t){return e.changed(t)}}}),t("div",{staticClass:"editor-logo"})]),t("aside",[t("ul",{staticClass:"ooo-result-nav"},[t("li",[t("a",{attrs:{id:"katex-button",href:"#","data-mimetypes":""},on:{click:e.selectResultType}},[e._v("Math")])]),t("li",[t("a",{attrs:{id:"latex-button",href:"#","data-mimetypes":"application/x-latex"},on:{click:e.selectResultType}},[e._v("LaTeX")])]),t("li",[t("a",{attrs:{id:"mathml-button",href:"#","data-mimetypes":"application/mathml+xml"},on:{click:e.selectResultType}},[e._v("MathML")])])]),t("div",{attrs:{id:"math-exports"}}),t("div",{staticClass:"ooo-action-bar"},[t("button",{ref:"copy",staticClass:"nav-btn btn-fab-mini btn-lightBlue",attrs:{id:"copy",disabled:""},on:{click:e.onCopy}},[t("img",{attrs:{src:r("d8db")}})])]),t("div",{staticClass:"graph",attrs:{id:"graph"}})])]),e._m(0)])},i=[function(){var e=this,t=e._self._c;return t("footer",[t("a",{attrs:{id:"myscript-footer-link",href:"http://www.myscript.com",target:"_blank",title:"MyScript"}},[e._v(" Copyright ﾂｩ MyScriptﾂｮ All Rights Reserved ")]),t("a",{attrs:{id:"legal-footer-link",href:"http://www.myscript.com/legal-notice/",target:"_blank",title:"Legal notice"}},[e._v(" Legal notice ")])])}],s=r("da34"),a={name:"App",components:{Info:()=>r.e("chunk-ec9f24ee").then(r.bind(null,"8f33"))},data(){return{editor:{},calculator:{},colors:["#0060A0","#09E05C","#E06A09"],exports:null,showInfo:!1}},async mounted(){const e=await fetch("/configuration.json"),t=await e.json();this.editor=new s["a"](this.$refs.editor,{configuration:{server:{protocol:"WEBSOCKET",scheme:t.scheme,host:t.host,applicationKey:t.math.applicationKey,hmacKey:t.math.hmacKey},recognition:{type:"MATH",math:{mimeTypes:["application/x-latex","application/mathml+xml"]}}}}),await this.editor.initialize(),this.$refs.editor.addEventListener("touchstart",this.removeWriteHere),this.$refs.editor.addEventListener("pointerdown",this.removeWriteHere),window.addEventListener("resize",()=>{this.editor.resize()}),this.initCalculator(),this.resultButtons=[document.getElementById("katex-button"),document.getElementById("latex-button"),document.getElementById("mathml-button")]},methods:{removeWriteHere(){const e=this.$el.querySelector(".write-here");e&&e.remove()},initCalculator(){const e=document.getElementById("graph");this.calculator=Desmos.Calculator(e,{keypad:!1,graphpaper:!0,expressions:!1,settingsMenu:!1,zoomButtons:!1,expressionsTopbar:!1,solutions:!1,border:!1,lockViewport:!1,expressionsCollapsed:!0})},extractExpressions(e){if(!e)return[""];if(0===e.indexOf("\\begin{align*}")){const t=e.replace("\\begin{align*} & ","").replace("\\end{align*} ","").replace(new RegExp("& ","g"),"").replace("\\dfrac","\\frac");return t.split("\\\\")}if(0===e.indexOf("\\begin{cases}")){const t=e.replace("\\begin{cases}","").replace("\\end{cases} ","").replace(new RegExp("& ","g"),"").replace("\\dfrac","\\frac");return t.split("\\\\")}if(e.includes("\\dfrac")){const t=e.replace("\\dfrac","\\frac");return t.split("\\\\")}return e.includes("\\\\")?e.split("\\\\"):[e]},exported(e){if(this.exports=e.detail,this.calculator)if(this.colors.forEach((e,t)=>{this.calculator.setExpression({id:t,latex:"",color:this.colors[t]})}),this.exports&&this.exports["application/x-latex"]){this.extractExpressions(this.exports["application/x-latex"]).forEach((e,t)=>{this.calculator.setExpression({id:t,latex:e,color:this.colors[t]})}),this.$refs.convert.disabled=!1;try{katex.render(this.exports["application/x-latex"],this.$refs.result)}catch(r){this.$refs.result.innerHTML=this.exports["application/x-latex"]}}else this.$refs.convert.disabled=!0,this.$refs.result.innerHTML="";let t=this.$el.querySelector(".ooo-selected a");t||(t=this.$el.querySelector("#katex-button")),this.selectType(t.dataset.mimetypes),t.parentElement.classList.add("ooo-selected")},changed(e){this.$refs.undo.disabled=!e.detail.canUndo,this.$refs.redo.disabled=!e.detail.canRedo,this.$refs.clear.disabled=e.detail.isEmpty},selectResultType(e){this.selectType(e.target.dataset.mimetypes),e.target.parentElement.classList.add("ooo-selected")},selectType(e){if(this.resultButtons.forEach(e=>{e.parentElement.classList.remove("ooo-selected")}),this.$refs.copy.setAttribute("disabled","true"),"application/x-latex"===e){this.$refs.copy.removeAttribute("disabled");try{katex.render(this.exports["application/x-latex"],this.$el.querySelector("#math-exports"))}catch(t){this.$el.querySelector("#math-exports").innerHTML=`katex can not render this expression (${this.exports["application/x-latex"]})`}}else this.$el.querySelector("#math-exports").textContent=this.exports[e||"application/x-latex"]},onCopy(){const e=document.querySelector(".ooo-selected a"),t=this.exports[e.dataset.mimetypes];"string"===typeof t||t instanceof String?this.copyToClipboard(t):this.copyToClipboard(JSON.stringify(t))},copyToClipboard(e){const t="_hiddenCopyText_",r=document.getElementById(t),n=document.activeElement;if(r)r.textContent=e,r.focus(),r.setSelectionRange(0,r.value.length);else{const r=document.createElement("textarea");r.style.position="absolute",r.style.left="-9999px",r.style.top="0",r.id=t,document.body.appendChild(r),r.textContent=e}let o;try{o=document.execCommand("copy")}catch(i){o=!1}return n&&"function"===typeof n.focus&&n.focus(),r&&(r.textContent=""),o}}},c=a,l=(r("7236"),r("2877")),d=Object(l["a"])(c,o,i,!1,null,null,null),u=d.exports;n["a"].config.productionTip=!1,new n["a"]({render:e=>e(u)}).$mount("#app")},7236:function(e,t,r){"use strict";r("534f")},"74e0":function(e,t,r){e.exports=r.p+"img/redo.a6ecde38.svg"},b54b:function(e,t,r){e.exports=r.p+"img/clear.b02f3529.svg"},d8db:function(e,t,r){e.exports=r.p+"img/copy.c64639c0.svg"}});
+//# sourceMappingURL=app.a34d9e14.js.map
+          </script>
+          <script>
+            // ページの読み込みが完了した時点で実行
+            window.addEventListener('DOMContentLoaded', (event) => {
+                // クラス名 `ooo-result-nav` を持つ要素を取得
+                var resultNav = document.querySelector('.ooo-result-nav');
+                if (resultNav) {
+                    // `ooo-result-nav` 要素内のすべての <a> タグを取得
+                    var links = resultNav.querySelectorAll('a');
+                    // 各 <a> タグに対して `href` 属性を削除
+                    links.forEach(function(link) {
+                        link.removeAttribute('href');
+                    });
+                }
+            });
+        </script>
+        <script>
+          (async () => {
+            // Load MathJax if it's not loaded
+            if (!window.MathJax) {
+                let script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js';
+                document.head.appendChild(script);
+                await new Promise(resolve => script.onload = resolve);
+            }
+        })();
+
+        document.getElementById('process-button').addEventListener('click', async () => {
+            // Get LaTeX from textarea or fallback to #math-exports
+            const textarea = document.getElementById('latex-input');
+            let latex = textarea.value.trim();
+            if (!latex) {
+                const container = document.getElementById('math-exports');
+                if (!container) {
+                    console.error('No element with id "math-exports" found.');
+                    return;
+                }
+                latex = container.textContent.trim();
+            }
+
+            // Replace LaTeX content to align equations
+            const alignedLatex = latex.replace(/\\begin{aligned}([\s\S]*?)\\end{aligned}/, (match, p1) => {
+                return `\\begin{aligned}
+                ${p1.replace(/(.+?)=(.+)/g, '$1 &= $2')}
+                \\end{aligned}`;
+            });
+
+            // Create a temporary container to render the LaTeX
+            let tempContainer = document.createElement('div');
+            tempContainer.style.visibility = 'hidden';
+            tempContainer.innerHTML = '\\[' + alignedLatex + '\\]';
+            document.body.appendChild(tempContainer);
+
+            // Render the LaTeX
+            try {
+                await MathJax.typesetPromise([tempContainer]);
+                console.log('MathJax has finished rendering the LaTeX.');
+            } catch (err) {
+                console.error('MathJax Error:', err);
+                document.body.removeChild(tempContainer);
+                return;
+            }
+
+            // Extract the rendered SVG
+            let svg = tempContainer.querySelector('svg');
+            if (!svg) {
+                console.error('No SVG found in the rendered content.');
+                document.body.removeChild(tempContainer);
+                return;
+            }
+
+            let svgData = new XMLSerializer().serializeToString(svg);
+            let svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+
+            // Remove the temporary container
+            document.body.removeChild(tempContainer);
+
+            // Create an image from the SVG
+            let img = new Image();
+            img.src = svgUrl;
+
+            img.onload = () => {
+                let scale = 10;
+                let canvas = document.createElement('canvas');
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                let ctx = canvas.getContext('2d');
+                ctx.scale(scale, scale);
+                ctx.drawImage(img, 0, 0);
+
+                // Copy the image to clipboard
+                canvas.toBlob(async (blob) => {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]);
+                        alert('Image copied to clipboard!');
+                    } catch (err) {
+                        console.error('Failed to copy image to clipboard:', err);
+                    }
+                }, 'image/png');
+            };
+
+            img.onerror = () => {
+                console.error('Failed to load SVG image.');
+            };
+        });
+      </script>
+        </body>
+      </html>
