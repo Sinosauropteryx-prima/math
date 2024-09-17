@@ -121,17 +121,7 @@
             });
         </script>
         <script>
-          (async () => {
-            // Load MathJax if it's not loaded
-            if (!window.MathJax) {
-                let script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js';
-                document.head.appendChild(script);
-                await new Promise(resolve => script.onload = resolve);
-            }
-        })();
-
-        document.getElementById('process-button').addEventListener('click', async () => {
+          document.getElementById('process-button').addEventListener('click', async () => {
             // Get LaTeX from textarea or fallback to #math-exports
             const textarea = document.getElementById('latex-input');
             let latex = textarea.value.trim();
@@ -195,16 +185,18 @@
                 ctx.drawImage(img, 0, 0);
 
                 // Copy the image to clipboard
-                canvas.toBlob(async (blob) => {
-                    try {
-                        await navigator.clipboard.write([
-                            new ClipboardItem({ 'image/png': blob })
-                        ]);
-                        alert('Image copied to clipboard!');
-                    } catch (err) {
-                        console.error('Failed to copy image to clipboard:', err);
-                    }
-                }, 'image/png');
+                if (navigator.clipboard) {
+                    canvas.toBlob(async (blob) => {
+                        try {
+                            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                            alert('Image copied to clipboard!');
+                        } catch (err) {
+                            console.error('Failed to copy image to clipboard:', err);
+                        }
+                    }, 'image/png');
+                } else {
+                    alert('Clipboard API not supported. Save the image manually.');
+                }
             };
 
             img.onerror = () => {
