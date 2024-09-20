@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>PDF作成サンプル</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit@0.0.4"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+    <style>
+        @font-face {
+            font-family: 'annzumoji';
+            src: url('https://sinosauropteryx-prima.github.io/math/annzumoji.ttf') format('truetype');
+        }
+        * {
+            font-family: 'annzumoji';
+        }
+        p {
+            font-size: 15px;
+            text-align: center;
+            margin: 10px;
+        }
+        .create {
+            background-color: #008CBA;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            font-size: 16px;
+        }
+        tbody {
+            display: inline-block;
+        }
+        .table-right {
+            border-right: 1px solid #484848;
+            padding-right: 15px;
+            margin-right: 17px;
+        }
+        th {
+            font-weight: normal !important;
+        }
+        tbody tr:first-child {
+            background: #d2e9d4;
+        }
+        tbody tr:nth-child(2) {
+            height: 7px;
+        }
+        #pdfPreview {
+            border: 1px solid #ccc;
+            display: block; /* iframeを表示 */
+        }
+        input[type=number] {
+            outline: none;
+        }
+        table * {
+            font-size: 15px;
+        }
+        /* デバイスが横向きの場合の記述 */
+        @media (orientation: landscape){
+            .details {
+                display: inline-block;
+                margin-right: 20px;
+            }
+            .body_mane {
+                display: flex;
+            }
+            #pdfPreview {
+                width: calc(100vw - 350px);
+                height: 100vh;
+            }
+        }
+
+        /* デバイスが縦向きの場合の記述 */
+        @media (orientation: portrait){
+            .details > div {
+                display: flex;
+                justify-content: center;
+            }
+            #pdfPreview {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="body_mane">
+        <div class="details">
+            <div>
+                <div>
+                    <p>&thinsp;幅&thinsp;: <input type="number" id="widthmm" value="100" onchange="embedFontAndMeasureText()"> mm</p>
+                    <p>高さ: <input type="number" id="heightmm" value="250" onchange="embedFontAndMeasureText()"> mm</p>
+                    <p>罫幅: <input type="number" id="verticalmm" value="7" onchange="embedFontAndMeasureText()"> mm</p>
+                </div>
+                <table class="pen-table">
+                    <tbody class="table-right">
+                        <tr>
+                            <th class="txtleft">A判</th>
+                            <th class="txtleft">サイズ（mm）</th>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"></td> 
+                            <td class="txtleft"></td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(841, 1189)">A0</button></td> 
+                            <td class="txtleft">841 × 1189</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(594, 841)">A1</button></td> 
+                            <td class="txtleft">594 × 841</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(420, 594)">A2</button></td> 
+                            <td class="txtleft">420 × 594</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(297, 420)">A3</button></td> 
+                            <td class="txtleft">297 × 420</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(210, 297)">A4</button></td> 
+                            <td class="txtleft">210 × 297</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(148, 210)">A5</button></td> 
+                            <td class="txtleft">148 × 210</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(105, 148)">A6</button></td> 
+                            <td class="txtleft">105 × 148</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(74, 105)">A7</button></td> 
+                            <td class="txtleft">&nbsp;74 × 105</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(52, 74)">A8</button></td> 
+                            <td class="txtleft">&nbsp;52 × 74</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(37, 52)">A9</button></td> 
+                            <td class="txtleft">&nbsp;37 × 52</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(26, 37)">A10</button></td> 
+                            <td class="txtleft">&nbsp;26 × 37</td> 
+                        </tr>
+                    </tbody>
+                    
+                    <tbody>
+                        <tr>
+                            <th class="txtleft">B判</th>
+                            <th class="txtleft">サイズ（mm）</th>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"></td> 
+                            <td class="txtleft"></td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(1030, 1456)">B0</button></td> 
+                            <td class="txtleft">1030 × 1456</td>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(728, 1030)">B1</button></td> 
+                            <td class="txtleft">&nbsp;728 × 1030</td>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(515, 728)">B2</button></td> 
+                            <td class="txtleft">&nbsp;515 × 728</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(364, 515)">B3</button></td> 
+                            <td class="txtleft">&nbsp;364 × 515</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(257, 364)">B4</button></td> 
+                            <td class="txtleft">&nbsp;257 × 364</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(182, 257)">B5</button></td> 
+                            <td class="txtleft">&nbsp;182 × 257</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(128, 182)">B6</button></td> 
+                            <td class="txtleft">&nbsp;128 × 182</td> 
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(91, 128)">B7</button></td> 
+                            <td class="txtleft">&nbsp;&nbsp;91 × 128</td>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(64, 91)">B8</button></td> 
+                            <td class="txtleft">&nbsp;&nbsp;64 × 91</td>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(45, 64)">B9</button></td> 
+                            <td class="txtleft">&nbsp;&nbsp;45 × 64</td>
+                        </tr>
+                        <tr> 
+                            <td class="txtleft"><button onclick="setDimensions(32, 45)">B10</button></td> 
+                            <td class="txtleft">&nbsp;&nbsp;32 × 45</td>
+                        </tr>
+                    </tbody>
+                </table>    
+            </div>
+        </div>
+        <iframe id="pdfPreview" src="" frameborder="0"></iframe>
+    </div>
+    <script>
+        function setDimensions(width, height) {
+            document.getElementById('widthmm').value = width;
+            document.getElementById('heightmm').value = height;
+            embedFontAndMeasureText();
+        }
+
+        const { PDFDocument, rgb } = PDFLib;
+
+        function mmToPoints(mm) {
+            return mm * 2.83465; // 1mm = 2.83465ポイント
+        }
+
+        async function embedFontAndMeasureText() {
+            // カスタムフォントの取得
+            const url = 'https://sinosauropteryx-prima.github.io/math/annzumoji.ttf';
+            const fontBytes = await fetch(url).then(res => res.arrayBuffer());
+
+            // 新しいPDFドキュメントを作成
+            const pdfDoc = await PDFDocument.create();
+
+            // `fontkit`のインスタンスを登録
+            pdfDoc.registerFontkit(fontkit);
+
+            // カスタムフォントを文書に埋め込む
+            const customFont = await pdfDoc.embedFont(fontBytes);
+
+            // 幅と高さをポイントに変換
+            const pageWidth = mmToPoints(document.getElementById('widthmm').valueAsNumber);
+            const pageHeight = mmToPoints(document.getElementById('heightmm').valueAsNumber);
+
+            // ページを追加（指定したサイズで追加）
+            const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+            // 線の開始位置と終了位置を設定
+            const lineStartY = mmToPoints(8.5); // 上から0.85cm
+            const lineLength = mmToPoints(30); // 3cmの長さ
+            const lineEndX = pageWidth - mmToPoints(6); // 右から0.6cm
+
+            // 点線の開始位置を計算
+            const lineStartX = lineEndX - lineLength; // 線の長さを考慮
+
+            // "No." テキストを描画
+            const noText = "No.";
+            const noTextSize = 8;
+            page.drawText(noText, {
+                x: lineStartX, // 左からの位置
+                y: pageHeight - mmToPoints(6.7), // 上から0.67cm
+                size: noTextSize,
+                font: customFont,
+                color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
+            });
+            
+            // 点線を描画
+            page.drawLine({
+                start: { x: lineStartX, y: pageHeight - lineStartY },
+                end: { x: lineEndX, y: pageHeight - lineStartY },
+                color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
+                thickness: 0.6,
+                dashArray: [2.5], // 点線のパターン
+            });
+
+            // "Date" テキストを描画
+            const dateText = "Date";
+            const dateTextSize = 8;
+            page.drawText(dateText, {
+                x: lineStartX, // 左からの位置
+                y: pageHeight - mmToPoints(14), // 上から1.4cm
+                size: dateTextSize,
+                font: customFont,
+                color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
+            });
+
+            // 上部の線を描画
+            page.drawLine({
+                start: { x: mmToPoints(6), y: pageHeight - lineStartY * 2 },
+                end: { x: lineEndX, y: pageHeight - lineStartY * 2 },
+                color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
+                thickness: 0.6,
+            });
+
+            // 何mmごとに線を描く？
+            const bold_widht = mmToPoints(document.getElementById('verticalmm').valueAsNumber + 2.5); // 太い幅
+            const upperLineY = pageHeight - lineStartY * 2 - bold_widht; // 2つ目の上部の線のY座標
+            const verticalSpacing = mmToPoints(document.getElementById('verticalmm').valueAsNumber); // 〇mmをポイントに変換
+            let line_y = upperLineY - verticalSpacing; // 初期位置は上部の線のY座標から〇mm下
+            let lineCount = 0; // 線の数をカウント
+
+            // 上部の線を描画
+            page.drawLine({
+                start: { x: mmToPoints(6), y: upperLineY },
+                end: { x: lineEndX, y: upperLineY },
+                color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
+                thickness: 0.6,
+            });
+
+            while (line_y > bold_widht) { // 下部から9.5mmの間には線を書かない
+                if (line_y - verticalSpacing <= bold_widht) {
+                    // 最後の線を描く
+                    page.drawLine({
+                        start: { x: mmToPoints(6), y: line_y },
+                        end: { x: lineEndX, y: line_y },
+                        color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
+                        thickness: 0.6,
+                    });
+                } else {
+                    page.drawLine({
+                        start: { x: mmToPoints(6), y: line_y },
+                        end: { x: lineEndX, y: line_y },
+                        color: rgb(0.894, 0.894, 0.894), // #E4E4E4
+                        thickness: 0.4,
+                    });
+                }
+                line_y -= verticalSpacing; // 次の線の位置を計算
+            }
+
+            // PDFドキュメントをバイトにシリアライズ
+            const pdfBytes = await pdfDoc.save();
+
+            // ブラウザにPDF文書をプレビュー表示
+            const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            document.getElementById('pdfPreview').src = pdfUrl;
+        }
+        window.onload = embedFontAndMeasureText;
+    </script>
+</body>
+</html>
