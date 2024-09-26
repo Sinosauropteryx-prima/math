@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拡大・縮小</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'annzumoji';
+            src: url('https://sinosauropteryx-prima.github.io/math/annzumoji.ttf') format('truetype');
+        }
+        * {
+            font-family: 'annzumoji';
+        }
+        body {
+            padding-left: 10px;
+        }
+        h3 {
+            font-size: 19px;
+        }
+        a {
+            text-decoration: none;
+            color: black;
+            background: #bfcae7;
+            padding: 3px 6px;
+            border: none;
+            border-radius: 15px;
+            margin-right: 5px;
+        }
+        #pdf-upload {
+            display: none;
+        }
+        .pdfChoose {
+            border: 1px solid #909090;
+            border-radius: 10px;
+            padding: 3px 8px;
+            background: #f7f5e4;
+            font-size: 13px;
+            display: inline-block;
+        }
+        .file-names {
+            max-width: 139px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin: 10px 0px 0px 5px;
+        }
+        table {
+            margin-bottom: 10px;
+        }
+        tbody {
+            display: inline-block;
+        }
+        .table-right {
+            border-right: 1px solid #484848;
+            padding-right: 10px;
+            margin-right: 12px;
+        }
+        th {
+            font-weight: normal !important;
+        }
+        tbody tr:first-child {
+            background: #d2e9d4;
+        }
+        tbody tr:nth-child(2) {
+            height: 7px;
+        }
+        input[type=number] {
+            outline: none;
+        }
+        table * {
+            font-size: 13px;
+        }
+        table button {
+            background: #ebede3;
+            border: 1px solid #948e8e;
+            border-radius: 5px;
+            padding: 2px 8px;
+        }
+        input[type="number"]::-webkit-outer-spin-button, 
+        input[type="number"]::-webkit-inner-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        #edit-pdf {
+            font-size: 13px;
+            background: #dbdbdb;
+            border: none;
+            border-radius: 10px;
+            padding: 2px 7px;
+            margin: 0 auto;
+            display: block;
+        }
+        .enter-filed {
+            display: flex;
+            align-items: center;
+        }
+        .enter-filed p {
+            font-size: 15px;
+        }
+        .enter-filed p:first-child {
+            width: 33px;
+            margin-right: 4px;
+            text-align: right;
+        }
+        .enter-filed input[type=number] {
+            width: 40px;
+            margin-right: 4px;
+        }
+        .enter-filed p:nth-child(3) {
+            margin-right: 4px;
+        }
+        .numberChange {
+            outline: none;
+            border-radius: 10px;
+            border: none;
+            background: #c2e7e7;
+            width: 20px;
+            padding: 0px;
+            height: 20px;
+        }
+        .size-setting {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h3><a href="https://sinosauropteryx-prima.github.io/math/目次.html">←</a>PDFの拡大・縮小</h3>
+    
+    <!-- PDFファイルのアップロード -->
+    <div class="deco-file">
+        <input type="file" id="pdf-upload" class="padding_trim" accept="application/pdf">
+        <label class="pdfChoose" for="pdf-upload">pdfを選択</label>
+        <p class="file-names" style="display: none;"></p>
+    </div>
+    
+    <div>
+        <div class="enter-filed">
+            <!-- 幅入力フィールド -->
+            <p>幅：</p><input type="number" id="width"><p>mm</p>
+            <input type="button" class="numberChange widthChange" onclick="++document.getElementById('width').valueAsNumber" value="▲">
+            <input type="button" class="numberChange widthChange" onclick="--document.getElementById('width').valueAsNumber" value="▼">
+        </div>
+        
+        <div class="enter-filed">
+            <!-- 高さ入力フィールド -->
+            <p>高さ：</p><input type="number" id="height"><p>mm</p>
+            <input type="button" class="numberChange heightChange" onclick="++document.getElementById('height').valueAsNumber" value="▲">
+            <input type="button" class="numberChange heightChange" onclick="--document.getElementById('height').valueAsNumber" value="▼">
+        </div>
+    </div>
+    <div class="size-setting">
+        <table class="pen-table">
+            <tbody class="table-right">
+                <tr>
+                    <th class="txtleft">A判</th>
+                    <th class="txtleft">サイズ（mm）</th>
+                </tr>
+                <tr> 
+                    <td class="txtleft"></td> 
+                    <td class="txtleft"></td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(841, 1189)">A0</button></td> 
+                    <td class="txtleft">841 × 1189</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(594, 841)">A1</button></td> 
+                    <td class="txtleft">594 × 841</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(420, 594)">A2</button></td> 
+                    <td class="txtleft">420 × 594</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(297, 420)">A3</button></td> 
+                    <td class="txtleft">297 × 420</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(210, 297)">A4</button></td> 
+                    <td class="txtleft">210 × 297</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(148, 210)">A5</button></td> 
+                    <td class="txtleft">148 × 210</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(105, 148)">A6</button></td> 
+                    <td class="txtleft">105 × 148</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(74, 105)">A7</button></td> 
+                    <td class="txtleft">&nbsp;74 × 105</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(52, 74)">A8</button></td> 
+                    <td class="txtleft">&nbsp;52 × 74</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(37, 52)">A9</button></td> 
+                    <td class="txtleft">&nbsp;37 × 52</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(26, 37)">A10</button></td> 
+                    <td class="txtleft">&nbsp;26 × 37</td> 
+                </tr>
+            </tbody>
+            
+            <tbody>
+                <tr>
+                    <th class="txtleft">B判</th>
+                    <th class="txtleft">サイズ（mm）</th>
+                </tr>
+                <tr> 
+                    <td class="txtleft"></td> 
+                    <td class="txtleft"></td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(1030, 1456)">B0</button></td> 
+                    <td class="txtleft">1030 × 1456</td>
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(728, 1030)">B1</button></td> 
+                    <td class="txtleft">&nbsp;728 × 1030</td>
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(515, 728)">B2</button></td> 
+                    <td class="txtleft">&nbsp;515 × 728</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(364, 515)">B3</button></td> 
+                    <td class="txtleft">&nbsp;364 × 515</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(257, 364)">B4</button></td> 
+                    <td class="txtleft">&nbsp;257 × 364</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(182, 257)">B5</button></td> 
+                    <td class="txtleft">&nbsp;182 × 257</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(128, 182)">B6</button></td> 
+                    <td class="txtleft">&nbsp;128 × 182</td> 
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(91, 128)">B7</button></td> 
+                    <td class="txtleft">&nbsp;&nbsp;91 × 128</td>
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(64, 91)">B8</button></td> 
+                    <td class="txtleft">&nbsp;&nbsp;64 × 91</td>
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(45, 64)">B9</button></td> 
+                    <td class="txtleft">&nbsp;&nbsp;45 × 64</td>
+                </tr>
+                <tr> 
+                    <td class="txtleft"><button onclick="setDimensions(32, 45)">B10</button></td> 
+                    <td class="txtleft">&nbsp;&nbsp;32 × 45</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- PDF編集ボタン -->
+        <button id="edit-pdf">作成</button>
+    </div>
+    <script>
+        // ファイル名を表示する
+        document.querySelectorAll(`.deco-file input[type='file']`).forEach(function() {
+            this.addEventListener('change', function(e) {
+                let parent = e.target.closest('.deco-file');
+                parent.querySelector('.file-names').innerHTML = '';
+                parent.querySelector('.file-names').style.display = 'block';
+                for (file of e.target.files) {
+                    parent.querySelector('.file-names').insertAdjacentHTML('beforeend', file.name + "<br>");
+                }
+            });
+        });
+
+        // サイズボタン
+        function setDimensions(width, height) {
+            document.getElementById('width').value = width;
+            document.getElementById('height').value = height;
+        }
+
+        let originalWidth, originalHeight;
+
+        // PDFを読み込み、元のサイズを取得
+        async function loadPDF() {
+            const fileInput = document.getElementById('pdf-upload');
+            if (fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            const pages = pdfDoc.getPages();
+
+            const firstPage = pages[0];
+            const { width, height } = firstPage.getSize();
+            originalWidth = width;
+            originalHeight = height;
+            document.getElementById('width').value = width / 2.83645;
+            document.getElementById('height').value = height / 2.83645;
+        }
+
+        // 幅または高さが入力されたときに自動計算
+        function updateDimensions(lastFocused) {
+            const widthMM = parseFloat(document.getElementById('width').valueAsNumber);
+            const heightMM = parseFloat(document.getElementById('height').valueAsNumber);
+
+            if (lastFocused === 'width' && !isNaN(widthMM) && widthMM > 0) {
+                // 幅が入力されていて、高さが未入力の場合
+                const heightScale = (widthMM * originalHeight) / originalWidth; 
+                document.getElementById('height').value = heightScale.toFixed(1);
+            } else if (lastFocused === 'height' && !isNaN(heightMM) && heightMM > 0) {
+                // 高さが入力されていて、幅が未入力の場合
+                const widthScale = (heightMM * originalWidth) / originalHeight;
+                document.getElementById('width').value = widthScale.toFixed(1);
+            } else {
+                // どちらも値が入っている場合
+                if (lastFocused === 'width') {
+                    const heightScale = (widthMM * originalHeight) / originalWidth; 
+                    document.getElementById('height').value = heightScale.toFixed(1);
+                } else if (lastFocused === 'height') {
+                    const widthScale = (heightMM * originalWidth) / originalHeight;
+                    document.getElementById('width').value = widthScale.toFixed(1);
+                }
+            }
+        }
+
+        // ボタンがクリックされたときの処理
+        document.getElementById('edit-pdf').addEventListener('click', async () => {
+            const fileInput = document.getElementById('pdf-upload');
+
+            if (fileInput.files.length === 0) {
+                alert('PDFファイルを選択してください。');
+                return;
+            }
+
+            const widthMM = parseFloat(document.getElementById('width').value);
+            const heightMM = parseFloat(document.getElementById('height').value);
+
+            const targetWidthPoints = widthMM * 2.83465;
+            const targetHeightPoints = heightMM * 2.83465;
+
+            const widthScale = targetWidthPoints / originalWidth;
+            const heightScale = targetHeightPoints / originalHeight;
+            const scale = Math.min(widthScale, heightScale);
+
+            const file = fileInput.files[0];
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            const pages = pdfDoc.getPages();
+
+            pages.forEach((page) => {
+                page.scale(scale, scale);
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank'); // 新しいタブでPDFを開く
+        });
+
+        let lastFocusedField = '';
+
+        // 入力フィールドが変更されたときの処理
+        document.getElementById('width').addEventListener('change', () => {
+            lastFocusedField = 'width';
+            updateDimensions(lastFocusedField);
+        });
+
+        document.getElementById('height').addEventListener('change', () => {
+            lastFocusedField = 'height';
+            updateDimensions(lastFocusedField);
+        });
+
+        document.querySelectorAll('.widthChange').forEach(function() {
+            this.addEventListener('click', () => {
+                lastFocusedField = 'width';
+                updateDimensions(lastFocusedField);
+            })
+        });
+
+        document.querySelectorAll('.heightChange').forEach(function() {
+            this.addEventListener('click', () => {
+                lastFocusedField = 'height';
+                updateDimensions(lastFocusedField);
+            })
+        });
+
+        // PDFが選択されたときにサイズを読み込む
+        document.getElementById('pdf-upload').addEventListener('change', loadPDF);
+    </script>
+</body>
+</html>
