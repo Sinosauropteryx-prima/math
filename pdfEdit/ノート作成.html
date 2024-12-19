@@ -117,21 +117,27 @@
         <div class="details">
             <div>
                 <div>
+                    <input name="highornumber" id="high" type="radio" checked onchange="highOrNumber()">
+                    <label for="high">高さ</label>
+                    <input name="highornumber" id="lineNumber" type="radio" onchange="highOrNumber()">
+                    <label for="lineNumber">行数</label>
+                </div>
+                <div>
                     <div class="enter-filed">
                         <!-- 幅入力フィールド -->
-                        <p>幅：</p><input type="number" id="widthmm" value="100" onchange="embedFontAndMeasureText()"><p>mm</p>
+                        <p>幅：</p><input type="number" id="widthmm" value="100"><p>mm</p>
                         <input type="button" class="numberChange heightChange" onclick="++document.getElementById('widthmm').valueAsNumber" value="▲">
                         <input type="button" class="numberChange heightChange" onclick="--document.getElementById('widthmm').valueAsNumber" value="▼">
                     </div>
                     <div class="enter-filed">
                         <!-- 高さ入力フィールド -->
-                        <p>高さ：</p><input type="number" id="heightmm" value="250" onchange="embedFontAndMeasureText()"><p>mm</p>
+                        <p id="filedName">高さ：</p><input type="number" id="heightmm" value="250"><p id="unit">mm</p>
                         <input type="button" class="numberChange heightChange" onclick="++document.getElementById('heightmm').valueAsNumber" value="▲">
                         <input type="button" class="numberChange heightChange" onclick="--document.getElementById('heightmm').valueAsNumber" value="▼">
                     </div>
                     <div class="enter-filed">
                         <!-- 罫幅入力フィールド -->
-                        <p>罫幅：</p><input type="number" id="verticalmm" value="7" onchange="embedFontAndMeasureText()"><p>mm</p>
+                        <p>罫幅：</p><input type="number" id="verticalmm" value="7"><p>mm</p>
                         <input type="button" class="numberChange heightChange" onclick="++document.getElementById('verticalmm').valueAsNumber" value="▲">
                         <input type="button" class="numberChange heightChange" onclick="--document.getElementById('verticalmm').valueAsNumber" value="▼">
                     </div>
@@ -256,13 +262,37 @@
     <script>
         function setDimensions(width, height) {
             document.getElementById('widthmm').value = width;
-            document.getElementById('heightmm').value = height;
+            if(document.getElementById('high').checked){
+                document.getElementById('heightmm').value = height;
+            }
         }
 
         const { PDFDocument, rgb } = PDFLib;
 
         function mmToPoints(mm) {
             return mm * 2.83465; // 1mm = 2.83465ポイント
+        }
+
+        let height = 250;
+        let lineNumber = 52;
+        let heightmm = document.getElementById('heightmm');
+
+        function highOrNumber(){
+            let highornumber = document.getElementsByName('highornumber');
+            let filedName = document.getElementById('filedName');
+            let unit = document.getElementById('unit');
+
+            if(highornumber[0].checked){ //highがチェックされていたら
+                filedName.textContent = '高さ：';
+                lineNumber = heightmm.value;
+                heightmm.value = height;
+                unit.textContent = 'mm';
+            } else if(highornumber[1].checked){ //numberがチェックされていたら
+                filedName.textContent = '行数：';
+                height = heightmm.value;
+                heightmm.value = lineNumber;
+                unit.textContent = '行';
+            }
         }
 
         async function embedFontAndMeasureText() {
@@ -281,7 +311,12 @@
 
             // 幅と高さをポイントに変換
             const pageWidth = mmToPoints(document.getElementById('widthmm').valueAsNumber);
-            const pageHeight = mmToPoints(document.getElementById('heightmm').valueAsNumber);
+            const verticalmm = document.getElementById('verticalmm').valueAsNumber;
+            let changeunit = heightmm.valueAsNumber;
+            if(document.getElementById('lineNumber').checked){
+                changeunit = 8.5*2 + verticalmm + 2.5 + (changeunit-1)*verticalmm + (verticalmm + 2.5)*2;
+            }
+            const pageHeight = mmToPoints(changeunit);
 
             // ページを追加（指定したサイズで追加）
             const page = pdfDoc.addPage([pageWidth, pageHeight]);
@@ -325,7 +360,7 @@
                 color: rgb(0.870588, 0.870588, 0.870588), // #DEDEDE
             });
 
-            // 上部の線を描画
+            // 上部の太線を描画
             page.drawLine({
                 start: { x: mmToPoints(6), y: pageHeight - lineStartY * 2 },
                 end: { x: lineEndX, y: pageHeight - lineStartY * 2 },
@@ -340,7 +375,7 @@
             let line_y = upperLineY - verticalSpacing; // 初期位置は上部の線のY座標から〇mm下
             let lineCount = 0; // 線の数をカウント
 
-            // 上部の線を描画
+            // 上部の2つ目の太線を描画
             page.drawLine({
                 start: { x: mmToPoints(6), y: upperLineY },
                 end: { x: lineEndX, y: upperLineY },
