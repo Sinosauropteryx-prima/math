@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>英文をシャッフル</title>
+        <style>
+            @font-face {
+                font-family: 'annzumoji';
+                src: url('https://sinosauropteryx-prima.github.io/math/annzumoji.ttf') format('truetype');
+            }
+            * {
+                font-family: 'annzumoji';
+            }
+            body {
+            padding-left: 10px;
+            }
+            h3 {
+                font-size: 19px;
+            }
+            a {
+                text-decoration: none;
+                color: black;
+                background: #bfcae7;
+                padding: 3px 6px;
+                border: none;
+                border-radius: 15px;
+                margin-right: 5px;
+            }
+            textarea {
+                outline: none;
+                width: 40em;
+                min-height: 2lh;
+                field-sizing: content;
+                resize: none;
+                font-size: 17px;
+            }
+            .instraction {
+                margin-top: 20px;
+                margin-bottom: 5px;
+            }
+            .choice {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h3><a href="https://sinosauropteryx-prima.github.io/math/目次.html">←</a>ノート作成</h3>
+        <p class="instraction">英文を入力</p>
+        <textarea id="enSentence"></textarea>
+        <div class="choice">
+            <input type="radio" name="first" id="firstsmall" checked><label for="firstsmall">先頭は小文字にする</label>
+            <input type="radio" name="first" id="firstBig"><label for="firstBig">先頭は大文字のまま</label>
+        </div>
+        <button onclick="shuffle()">シャッフル</button>
+        <p id="shuffleyes"></p>
+        <script>
+            function safeShuffle(array) {
+                if (!Array.isArray(array) || array.length === 0) {
+                    console.error("無効な配列です");
+                    return array;
+                }
+
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    if (typeof array[i] !== typeof array[j]) {
+                        console.error("異なる型の要素があります");
+                        continue;
+                    }
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function shuffle() {
+                let enSentence = document.getElementById('enSentence').value; // ボタンがクリックされたときに最新の値を取得
+                let firstsmallChecked = document.getElementById('firstsmall').checked;
+                if(firstsmallChecked){
+                    let firstWord = enSentence.slice(0,1);
+                    enSentence = enSentence.slice(1);
+                    enSentence = firstWord.toLowerCase() + enSentence;
+                }
+                let wordSentence = enSentence.replace(/,/g,' ,');
+                let endWord = wordSentence.slice(-1); // 最後の文字
+                if(endWord!='.' && endWord!='!' && endWord!='?'){
+                    endWord = ' ';
+                } else {
+                    wordSentence = wordSentence.slice( 0, -1);
+                }
+                let arraySentence = wordSentence.split(' ');
+                let arrayShuffle = safeShuffle(arraySentence);
+
+                let shuffleSentence = '( ' + arrayShuffle[0];
+                for(let i = 1; i<arraySentence.length; i++){
+                    shuffleSentence = shuffleSentence + ' / ' + arrayShuffle[i];
+                }
+                shuffleSentence = shuffleSentence + ' )' + endWord;
+
+                document.getElementById('shuffleyes').textContent = shuffleSentence;
+
+            }
+        </script>
+    </body>
+</html>
