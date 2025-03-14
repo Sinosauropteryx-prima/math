@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GitHub API Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .dragList {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 25px;
+    }
+    .item {
+      position: relative;
+      z-index: 0;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+      width: 30%;
+      background: #fff;
+      box-shadow: 0 0 3px 0 rgb(0 0 0 / 12%), 0 2px 3px 0 rgb(0 0 0 / 22%);
+    }
+    .item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .item:after {
+      content: attr(data-id);
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #313131;
+      position: relative;
+      text-align: center;
+      z-index: 1;
+      width: 50%;
+      pointer-events: none;
+    }
+    .item.dragging {
+      background-color: #aaa;
+      box-shadow: none;
+      opacity: 0.7;
+    }
+    .item.dragging:after {
+      display: none;
+    }
+    .drop-target {
+      border: 2px dashed red;
+    }
+  </style>
+</head>
+<body>
+  <h1>GitHub API Example</h1>
+  <div id="authContent">
+    <input type="password" id="token" placeholder="GitHubトークンを入力してください...">
+    <button id="authButton">認証</button>
+  </div>
+  <div id="mainContent" style="display: none;">
+    <select id="folderSelect">
+      <option value="">フォルダを選択してください...</option>
+    </select>
+    <input type="text" id="folderName" placeholder="フォルダ名を入力してください...">
+    <input type="file" id="fileInput" multiple>
+    <div id="imagePreviews" class="dragList"></div>
+    <input type="text" id="fileName" placeholder="ファイル名を入力してください...">
+    <button id="uploadButton">写真をアップロード</button>
+  </div>
+  <script>
+    const repo = 'Sinosauropteryx-prima/math';
+    const basePath = 'pdfEdit';
+
+    document.getElementById('authButton').addEventListener('click', async () => {
+      const token = document.getElementById('token').value.trim();
+      if (!token) {
+        alert('トークンを入力してください');
+        return;
+      }
+      try {
+        const response = await fetch(`https://api.github.com/repos/${repo}`, {
+          headers: { 'Authorization': `token ${token}` }
+        });
+        if (response.ok) {
+          document.getElementById('authContent').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          fetchFolders(token);
+        } else {
+          alert('認証に失敗しました。トークンを確認してください。');
+        }
+      } catch (error) {
+        console.error('認証エラー:', error);
+        alert('認証に失敗しました。');
+      }
+    });
+
+    async function fetchFolders(token) {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${repo}/contents/${basePath}`, {
+          headers: { 'Authorization': `token ${token}` }
+        });
+        const data = await response.json();
+        const folderSelect = document.getElementById('folderSelect');
+        folderSelect.innerHTML = '<option value="">フォルダを選択してください...</option>';
+        data.forEach(item => {
+          if (item.type === 'dir') {
+            const option = document.createElement('option');
+            option.value = item.name;
+            option.textContent = item.name;
+            folderSelect.appendChild(option);
+          }
+        });
+      } catch (error) {
+        console.error('フォルダの取得に失敗しました:', error);
+      }
+    }
+
+    document.getElementById('fileInput').addEventListener('change', (event) => {
+      const imagePreviews = document.getElementById('imagePreviews');
+      imagePreviews.innerHTML = ''; // 既存のプレビューをクリア
+      const files = Array.from(event.target.files);
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const container = document.createElement('div');
+          container.classList.add('item');
+          container.setAttribute('draggable', 'true');
+          container.dataset.id = index + 1;  // 選択順でIDを付ける
+          const imgElement = document.createElement('img');
+          imgElement.src = e.target.result;
+          container.appendChild(imgElement);
+          imagePreviews.appendChild(container);
+
+          container.addEventListener('dragstart', handleDragStart);
+          container.addEventListener('dragover', handleDragOver);
+          container.addEventListener('dragend', handleDragEnd);
+        };
+        reader.readAsDataURL(file);
+      });
+      updateNumbers();  // 番号を更新
+    });
+
+    document.getElementById('uploadButton').addEventListener('click', async () => {
+      const fileInput = document.getElementById('fileInput');
+      const folderNameInput = document.getElementById('folderName');
+      const token = document.getElementById('token').value.trim();
+      if (fileInput.files.length === 0 || folderNameInput.value.trim() === '' || !token) {
+        alert('ファイルとフォルダ名を入力してください');
+        return;
+      }
+      const folderName = folderNameInput.value.trim();
+      const sortedFiles = Array.from(document.querySelectorAll('.item'))
+        .map(container => fileInput.files[container.dataset.id - 1]);
+      for (let i = 0; i < sortedFiles.length; i++) {
+        const file = sortedFiles[i];
+        const fileReader = new FileReader();
+        fileReader.onload = async (e) => {
+          const fileContent = e.target.result.split(',')[1];
+          const uploadResponse = await fetch(`https://api.github.com/repos/${repo}/contents/${basePath}/${folderName}/${file.name}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: '写真をアップロードしました',
+              content: fileContent
+            })
+          });
+          if (uploadResponse.ok) {
+            alert(`${file.name} がアップロードされました`);
+          } else {
+            const errorData = await uploadResponse.json();
+            alert(`アップロードに失敗しました: ${errorData.message}`);
+          }
+        };
+        fileReader.readAsDataURL(file);
+      }
+    });
+
+    const state = {};
+    const framerate = 100;
+
+    function handleDragStart(e) {
+      const item = e.currentTarget;
+      e.dataTransfer.setData('text', item.dataset.id);
+      state.dragging = item;
+      state.anchor = item.nextElementSibling;
+      state.lastFrame = Date.now();
+      setTimeout(() => {
+        state.dragging.classList.add('dragging');
+      });
+    }
+
+    function handleDragOver(e) {
+      if (state.lastFrame + framerate > Date.now()) return;
+
+      const target = e.target;
+      if (state.dragging !== target) {
+        const parent = state.dragging.parentNode;
+        if (parent === target.parentNode) {
+          const displace = getIndex(state.dragging) > getIndex(target) ? target : target.nextElementSibling;
+          parent.insertBefore(state.dragging, displace);
+        }
+      }
+    }
+
+    function handleDragEnd(e) {
+      state.dragging.classList.remove('dragging');
+      updateNumbers(); // 番号を更新
+    }
+
+    function getIndex(item) {
+      return [...item.parentNode.children].indexOf(item);
+    }
+
+    function updateNumbers() {
+      const items = document.querySelectorAll('.item');
+      items.forEach((item, index) => {
+        item.setAttribute('data-id', index + 1);  // 番号を再設定
+        const idElement = item.querySelector('div');
+        if (idElement) {
+          idElement.textContent = index + 1;  // 番号を表示
+        }
+      });
+    }
+  </script>
+</body>
+</html>
