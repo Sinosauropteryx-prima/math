@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分割</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'annzumoji';
+            src: url('https://sinosauropteryx-prima.github.io/math/annzumoji.ttf') format('truetype');
+        }
+        * {
+            font-family: 'annzumoji';
+        }
+        body {
+            padding-left: 10px;
+        }
+        h3 {
+            font-size: 19px;
+        }
+        a {
+            text-decoration: none;
+            color: black;
+            background: #bfcae7;
+            padding: 3px 6px;
+            border: none;
+            border-radius: 15px;
+            margin-right: 5px;
+        }
+        #file-input {
+            display: none;
+        }
+        .pdfChoose {
+            border: 1px solid #909090;
+            border-radius: 10px;
+            padding: 3px 8px;
+            background: #f7f5e4;
+            font-size: 13px;
+            display: inline-block;
+        }
+        .file-names {
+            max-width: 139px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin: 10px 0px 0px 5px;
+        }
+        input[type="number"]::-webkit-outer-spin-button, 
+        input[type="number"]::-webkit-inner-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type="number"] {
+            outline: none;
+        }
+        .numberChange {
+            outline: none;
+            border-radius: 10px;
+            border: none;
+            background: #c2e7e7;
+            width: 20px;
+            padding: 0px;
+            height: 20px;
+        }
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto; /* 縦スクロールを有効にする */
+            height: calc(100vh - 90px); /* 高さを設定 */
+            overflow-x: hidden;
+            row-gap: 20px;
+            padding: 0px 10px 10px 10px;
+        }
+        div:has( > .canvas-container) {
+            width: calc(100vw - 170px);
+            margin-left: 10px;
+        }
+        canvas {
+            border: 1px solid rgb(145, 145, 145); /* Canvasの境界線 */
+        }
+        .wantrow {
+            display: flex;
+        }
+        .padding-trim-properties {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 40px;
+        }
+        .padding-trim-properties p:first-child {
+            font-size: 15px;
+            width: 49px;
+            text-align: right;
+            padding-right: 5px;
+        }
+        .padding-trim-properties input:nth-child(2) {
+            width: 25px;
+        }
+        .padding-trim-properties p:nth-child(3) {
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        .deco-file {
+            background: #ebeded;
+            padding: 5px 7px 5px 5px;
+            width: 100%;
+        }
+        #create {
+            font-size: 13px;
+            background: #dbdbdb;
+            border: none;
+            border-radius: 10px;
+            padding: 2px 7px;
+        }
+        div:has( > .deco-file) {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #fit-change {
+            border: none;
+            background: #c7f1bc;
+            border-radius: 5px;
+        }
+        .center {
+            border-bottom: 1px solid;
+            padding: 7px;
+        }
+        .center div:first-child {
+            margin-bottom: 5px;
+        }
+        .center label {
+            font-size: 15px;
+        }
+        .direction {
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h3><a href="https://sinosauropteryx-prima.github.io/math/目次.html">←</a>PDFページ分割</h3>
+    <div class="wantrow">
+        <div>
+            <div class="deco-file">
+                <input type="file" id="file-input" class="padding_trim" accept="application/pdf">
+                <label class="pdfChoose" for="file-input">pdfを選択</label>
+                <p class="file-names" style="display: none;"></p>
+            </div>
+            <div style="margin: 10px 0px;">
+                <div class="center">
+                    <div><label for="verticalCenter">上下半分</label><input type="checkbox" id="verticalCenter" class="centerDivide"></div>
+                    <div><label for="horizontalCenter">左右半分</label><input type="checkbox" id="horizontalCenter" class="centerDivide"></div>
+                </div>
+                <div class="padding-trim-properties"><p>top</p><input type="number" id="topmm" value="0" class="padding_trim"><p>mm</p><input type="button" class="numberChange" value="▲"><input type="button" class="numberChange" value="▼"></div>
+                <div class="padding-trim-properties"><p>left</p><input type="number" id="leftmm" value="0" class="padding_trim"><p>mm</p><input type="button" class="numberChange" value="▲"><input type="button" class="numberChange" value="▼"></div>
+                <div class="padding-trim-properties"><p>right</p><input type="number" id="rightmm" value="0" class="padding_trim"><p>mm</p><input type="button" class="numberChange" value="▲"><input type="button" class="numberChange" value="▼"></div>
+                <div class="padding-trim-properties"><p>bottom</p><input type="number" id="bottommm" value="0" class="padding_trim"><p>mm</p><input type="button" class="numberChange" value="▲"><input type="button" class="numberChange" value="▼"></div>
+            </div>
+            <div class="direction">
+                <label for="lTor">左→右</label><input type="radio" id="lTor" name="direction" checked>
+                <label for="rTol">右→左</label><input type="radio" id="rTol" name="direction">
+            </div>
+            <button id="create">分割</button>
+        </div>
+        <div>
+            <!-- pdf表示のメニュー -->
+            <div style="padding-left: 10px;">
+                <button id="fit-change" style="display: none;">
+                    <svg id="fit-to-width-icon" width="21" height="20" viewBox="0 0 21 20" style="display: none;"><path d="M7.38 7.92a.5.5 0 01-.04.7l-1 .88H9a.5.5 0 010 1H6.34l1 .87a.5.5 0 11-.66.76l-2-1.75a.5.5 0 010-.76l2-1.75a.5.5 0 01.7.05z"></path><path d="M14.68 10.5l-1 .87a.5.5 0 00.66.76l2-1.75a.5.5 0 000-.76l-2-1.75a.5.5 0 00-.66.76l1 .87H12a.5.5 0 000 1h2.67z"></path><path d="M2.5 6c0-1.1.9-2 2-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-12a2 2 0 01-2-2V6zm2-1a1 1 0 00-1 1v8a1 1 0 001 1h12a1 1 0 001-1V6a1 1 0 00-1-1h-12z"></path></svg>
+                    <svg id="fit-to-page-icon" width="20" height="20" viewBox="0 0 20 20" style="display: block;"><path d="M5.5 6C4.67 6 4 6.67 4 7.5v1a.5.5 0 001 0v-1c0-.28.22-.5.5-.5h1a.5.5 0 000-1h-1z"></path><path d="M13.5 6a.5.5 0 000 1h1c.28 0 .5.22.5.5v1a.5.5 0 001 0v-1c0-.83-.67-1.5-1.5-1.5h-1z"></path><path d="M5 11.5a.5.5 0 00-1 0v1c0 .83.67 1.5 1.5 1.5h1a.5.5 0 000-1h-1a.5.5 0 01-.5-.5v-1z"></path><path d="M16 11.5a.5.5 0 00-1 0v1a.5.5 0 01-.5.5h-1a.5.5 0 000 1h1c.83 0 1.5-.67 1.5-1.5v-1z"></path><path d="M2 6c0-1.1.9-2 2-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm1 0v8a1 1 0 001 1h12a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1z"></path><path d="M5.5 6C4.67 6 4 6.67 4 7.5v1a.5.5 0 001 0v-1c0-.28.22-.5.5-.5h1a.5.5 0 000-1h-1z"></path><path d="M5 11.5a.5.5 0 00-1 0v1c0 .83.67 1.5 1.5 1.5h1a.5.5 0 000-1h-1a.5.5 0 01-.5-.5v-1z"></path></svg>
+                </button>
+            </div>
+            <div class="canvas-container" id="canvas-container"></div> <!-- PDF表示用のcanvasを入れるコンテナ -->
+        </div>
+    </div>
+
+    <script>
+        // ファイル名を表示する
+        document.querySelectorAll(`.deco-file input[type='file']`).forEach(function() {
+            this.addEventListener('change', function(e) {
+                let parent = e.target.closest('.deco-file');
+                parent.querySelector('.file-names').innerHTML = '';
+                parent.querySelector('.file-names').style.display = 'block';
+                for (file of e.target.files) {
+                    parent.querySelector('.file-names').insertAdjacentHTML('beforeend', file.name + "<br>");
+                }
+            });
+        });
+
+        const checkboxes = document.querySelectorAll('.centerDivide');
+        checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                // このチェックがONになった場合、他のチェックを外す
+                checkboxes.forEach(other => {
+                    if (other !== checkbox) {
+                        other.checked = false;
+                    }
+                });
+            }
+            // チェックがOFFの場合は何もしない（他もOFFのまま）
+            });
+        });
+
+        // mm（ミリメートル）をポイントに変換する関数
+        function mmToPoints(mm) {
+            return mm * 2.83465;
+        }
+        
+        // カラーコードをRGBに変換する関数
+        function hexToRgb(hex) {
+            // '#'を削除
+            hex = hex.replace('#', '');
+            // RGBに変換
+            const bigint = parseInt(hex, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return [r, g, b];
+        }
+
+        const processPdf = async () => {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("PDFファイルを選択してください。");
+                return;
+            }
+
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            const pageCount = pdfDoc.getPageCount();
+            const mergedPdf = await PDFLib.PDFDocument.create();
+
+            const vCenter = document.getElementById("verticalCenter").checked;
+            const hCenter = document.getElementById("horizontalCenter").checked;
+            const top = mmToPoints(document.getElementById('topmm').valueAsNumber);
+            const left = mmToPoints(document.getElementById('leftmm').valueAsNumber);
+            const right = mmToPoints(document.getElementById('rightmm').valueAsNumber);
+            const bottom = mmToPoints(document.getElementById('bottommm').valueAsNumber);
+            const lTor = document.getElementById("lTor").checked;
+            const rTol = document.getElementById("rTol").checked;
+
+            // 全てのグループ用 input を取得
+            const inputs = document.querySelectorAll('.padding_trim[type="number"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input.value.trim() !== '') {
+                        // 入力がある場合は他の input を 0 にする
+                        inputs.forEach(otherInput => {
+                            if (otherInput !== input) {
+                                otherInput.value = '0';
+                            }
+                        });
+                    }
+                    if (input.value.trim() < 0) {
+                        alert("正の数を入力してください。");
+                    }
+                });
+            });
+
+            // 最大幅を取得するための変数
+            let maxWidth = 0;
+            // ページの幅を保存する配列
+            let pageWidths = [];
+
+            // 最大高さを取得するための変数
+            let maxHeight = 0;
+            // ページの高さを保存する配列
+            let pageHeights = [];
+
+            // 背景色の取得
+            const backgroundColorCode = "#ffffff"; //白
+            const backgroundColor = hexToRgb(backgroundColorCode);
+
+            for (let i = 0; i < pageCount; i++) {
+                const firstPage = pdfDoc.getPage(i);
+                const embeddedFirstPage = await mergedPdf.embedPage(firstPage);
+                const firstPageSize = firstPage.getSize();
+                let createPageWidth = [];
+                let createPageHeight = [];
+                if (vCenter) {
+                    createPageWidth.push(firstPageSize.width);
+                    createPageHeight.push(firstPageSize.height / 2);
+                    createPageWidth.push(createPageWidth[0]);
+                    createPageHeight.push(createPageHeight[0]);
+                } else if (hCenter) {
+                    createPageWidth.push(firstPageSize.width / 2);
+                    createPageHeight.push(firstPageSize.height);
+                    createPageWidth.push(createPageWidth[0]);
+                    createPageHeight.push(createPageHeight[0]);
+                } else if (left > 0) {
+                    createPageWidth.push(left);
+                    createPageHeight.push(firstPageSize.height);
+                    createPageWidth.push(firstPageSize.width - left);
+                    createPageHeight.push(createPageHeight[0]);
+                } else if (right > 0) {
+                    createPageWidth.push(firstPageSize.width - right);
+                    createPageHeight.push(firstPageSize.height);
+                    createPageWidth.push(right);
+                    createPageHeight.push(createPageHeight[0]);
+                } else if (top > 0) {
+                    createPageWidth.push(firstPageSize.width);
+                    createPageHeight.push(top);
+                    createPageWidth.push(createPageWidth[0]);
+                    createPageHeight.push(firstPageSize.height - top);
+                } else if (bottom > 0) {
+                    createPageWidth.push(firstPageSize.width);
+                    createPageHeight.push(firstPageSize.height - bottom);
+                    createPageWidth.push(createPageWidth[0]);
+                    createPageHeight.push(bottom);
+                }
+                
+                for (let k=0; k<2; k++) {
+                    let index;
+                    if (lTor) {
+                        index = k;
+                    } else {
+                        if (k==0) {
+                            index = 1;
+                        } else {
+                            index = 0;
+                        }
+                    }
+                    const createPage = mergedPdf.addPage([createPageWidth[index], createPageHeight[index]]);
+                
+                    // 背景色を指定
+                    createPage.drawRectangle({
+                        x: 0,
+                        y: 0,
+                        width: createPageWidth[index],
+                        height: createPageHeight[index],
+                        color: PDFLib.rgb(backgroundColor[0] / 255, backgroundColor[1] / 255, backgroundColor[2] / 255), // 0から1の範囲に変換
+                    });
+                    
+                    if (index == 0) {
+                        createPage.drawPage(embeddedFirstPage, { x: 0, y: createPageHeight[1] });
+                    } else {
+                        createPage.drawPage(embeddedFirstPage, { x: createPageWidth[0], y: 0 });
+                    }
+                    
+
+                    // 最大幅を更新
+                    if (createPageWidth[index] > maxWidth) {
+                        maxWidth = createPageWidth[index];
+                    }
+
+                    // 最大高さを更新
+                    if (createPageHeight[index] > maxHeight) {
+                        maxHeight = createPageHeight[index];
+                    }
+
+                    // ページ幅を配列に追加
+                    pageWidths.push(createPageWidth[index]);
+
+                    // ページ高さを配列に追加
+                    pageHeights.push(createPageHeight[index]);
+                }
+            }
+
+            // styleタグが2つあるときは下のstyleタグを消す
+            const styles = document.head.getElementsByTagName('style');
+            if (styles.length > 1) {
+                styles[1].parentNode.removeChild(styles[1]);
+            }
+
+            // styleタグを挿入
+            const style = document.createElement('style');
+            document.head.appendChild(style);
+
+            // pdf表示切替ボタン
+            const fitChange = document.getElementById('fit-change');
+            const fitToWidthIcon = document.getElementById('fit-to-width-icon');
+            const fitToPageIcon = document.getElementById('fit-to-page-icon');
+
+
+            if(fitChange.style.display === 'none'){
+                fitChange.style.display = 'block';// fit-changeを表示
+            }
+
+            if (fitToWidthIcon.style.display === 'block') {
+            // fit-to-width-iconが表示の時
+
+                //canvasのstyle
+                for (let i = 0; i < pageCount; i++) {
+                    style.innerHTML += `
+                        .canvas-container canvas:nth-child(${i + 1}) {
+                            height: ${(pageHeights[i] / maxHeight) * 100}%; 
+                        }
+                    `;
+                }
+                
+            } else if (fitToPageIcon.style.display === 'block'){
+            // fit-to-page-iconが表示の時
+
+                //canvasのstyle
+                for (let i = 0; i < pageCount; i++) {
+                    style.innerHTML += `
+                        .canvas-container canvas:nth-child(${i + 1}) {
+                            width: ${(pageWidths[i] / maxWidth) * 100}%; 
+                        }
+                    `;
+                }
+            }
+
+            const pdfBytes = await mergedPdf.save();
+            const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+
+            // PDFをcanvasに表示
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            loadingTask.promise.then(async (pdf) => {
+                const canvasContainer = document.getElementById('canvas-container');
+                canvasContainer.innerHTML = ''; 
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const scale = 3; // 画質向上のためスケールを設定
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    canvasContainer.appendChild(canvas); // コンテナにキャンバスを追加
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    await page.render(renderContext).promise;  // ページをレンダリング
+                }
+            });
+
+            // 作成ボタンのクリックイベント
+            document.getElementById('create').onclick = () => {
+                window.open(pdfUrl, '_blank'); // 新しいタブでPDFを開く
+            };
+        };
+            
+
+        // Inputのchangeイベントリスナー
+        document.querySelectorAll('.padding_trim').forEach(input => {
+            input.addEventListener('change', processPdf);
+        });
+
+        // pdf表示切替ボタンのclickイベントリスナーを追加
+        document.getElementById('fit-change').addEventListener('click', async () => {
+            
+            // pdfの表示切替ボタン
+            const fitToWidthIcon = document.getElementById('fit-to-width-icon');
+            const fitToPageIcon = document.getElementById('fit-to-page-icon');
+
+            if (fitToWidthIcon.style.display === 'block') {
+                // fit-to-width-iconが表示の時
+                fitToWidthIcon.style.display = 'none'; // fit-to-width-iconを非表示
+                fitToPageIcon.style.display = 'block';   // fit-to-page-iconを表示
+            } else {
+                // fit-to-page-iconが表示の時
+                fitToWidthIcon.style.display = 'block';   // fit-to-width-iconを表示
+                fitToPageIcon.style.display = 'none';   // fit-to-page-iconを非表示
+            }            
+
+            // PDF処理を呼び出す
+            await processPdf();
+        });
+
+        // 値を変更するボタンのclickイベントリスナーを追加
+        document.querySelectorAll('.numberChange').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                // fileの有無
+                const fileInput = document.getElementById('file-input');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert("PDFファイルを選択してください。");
+                    return;
+                }
+
+                // ボタンの親要素（<p>）を取得
+                const parent = e.target.closest('div');
+
+                // 親要素内の<input type="number">を取得
+                const numberInput = parent.querySelector('input[type="number"]');
+                
+                if (button.value === '▲') {
+                    // 数字を＋1する
+                    ++numberInput.valueAsNumber;
+                } else {
+                    // 数字を－1する
+                    --numberInput.valueAsNumber;
+                }
+
+                // PDF処理を呼び出す
+                await processPdf();
+            });
+        });
+    </script>
+</body>
+</html>
