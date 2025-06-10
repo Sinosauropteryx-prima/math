@@ -160,8 +160,8 @@
                 <div class="padding-trim-properties"><p>bottom</p><input type="number" id="bottommm" value="0" class="padding_trim"><p>mm</p><input type="button" class="numberChange" value="▲"><input type="button" class="numberChange" value="▼"></div>
             </div>
             <div class="direction">
-                <label for="lTor">左→右</label><input type="radio" id="lTor" name="direction" checked>
-                <label for="rTol">右→左</label><input type="radio" id="rTol" name="direction">
+                <label for="lTor">左→右，上→下</label><input type="radio" id="lTor" name="direction" checked>
+                <label for="rTol">右→左，下→上</label><input type="radio" id="rTol" name="direction" class="">
             </div>
             <button id="create">分割</button>
         </div>
@@ -236,14 +236,14 @@
             const pageCount = pdfDoc.getPageCount();
             const mergedPdf = await PDFLib.PDFDocument.create();
 
-            const vCenter = document.getElementById("verticalCenter").checked;
-            const hCenter = document.getElementById("horizontalCenter").checked;
+            const vCenter = document.getElementById("verticalCenter");
+            const hCenter = document.getElementById("horizontalCenter");
             const top = mmToPoints(document.getElementById('topmm').valueAsNumber);
             const left = mmToPoints(document.getElementById('leftmm').valueAsNumber);
             const right = mmToPoints(document.getElementById('rightmm').valueAsNumber);
             const bottom = mmToPoints(document.getElementById('bottommm').valueAsNumber);
-            const lTor = document.getElementById("lTor").checked;
-            const rTol = document.getElementById("rTol").checked;
+            const lTor = document.getElementById("lTor");
+            const rTol = document.getElementById("rTol");
 
             // 全てのグループ用 input を取得
             const inputs = document.querySelectorAll('.padding_trim[type="number"]');
@@ -281,43 +281,45 @@
                 const firstPage = pdfDoc.getPage(i);
                 const embeddedFirstPage = await mergedPdf.embedPage(firstPage);
                 const firstPageSize = firstPage.getSize();
-                let createPageWidth = [];
-                let createPageHeight = [];
-                if (vCenter) {
-                    createPageWidth.push(firstPageSize.width);
-                    createPageHeight.push(firstPageSize.height / 2);
-                    createPageWidth.push(createPageWidth[0]);
-                    createPageHeight.push(createPageHeight[0]);
-                } else if (hCenter) {
-                    createPageWidth.push(firstPageSize.width / 2);
-                    createPageHeight.push(firstPageSize.height);
-                    createPageWidth.push(createPageWidth[0]);
-                    createPageHeight.push(createPageHeight[0]);
+                let createPageWidth = [firstPageSize.width, 0];
+                let createPageHeight = [firstPageSize.height, 0];
+                let positionX = [0, 0];
+                let positionY = [0, 0];
+                if (vCenter.checked) {
+                    createPageWidth.unshift(firstPageSize.width, firstPageSize.width);
+                    createPageHeight.unshift(firstPageSize.height / 2, firstPageSize.height / 2);
+                    positionX.unshift(0, 0);
+                    positionY.unshift(-1 * createPageHeight[0], 0);
+                } else if (hCenter.checked) {
+                    createPageWidth.unshift(firstPageSize.width / 2, firstPageSize.width / 2);
+                    createPageHeight.unshift(firstPageSize.height, firstPageSize.height);
+                    positionX.unshift(0, -1 * createPageWidth[1]);
+                    positionY.unshift(0, 0);
                 } else if (left > 0) {
-                    createPageWidth.push(left);
-                    createPageHeight.push(firstPageSize.height);
-                    createPageWidth.push(firstPageSize.width - left);
-                    createPageHeight.push(createPageHeight[0]);
+                    createPageWidth.unshift(left, firstPageSize.width - left);
+                    createPageHeight.unshift(firstPageSize.height, firstPageSize.height);
+                    positionX.unshift(0, -1 * left);
+                    positionY.unshift(0, 0);
                 } else if (right > 0) {
-                    createPageWidth.push(firstPageSize.width - right);
-                    createPageHeight.push(firstPageSize.height);
-                    createPageWidth.push(right);
-                    createPageHeight.push(createPageHeight[0]);
+                    createPageWidth.unshift(firstPageSize.width - right, right);
+                    createPageHeight.unshift(firstPageSize.height, firstPageSize.height);
+                    positionX.unshift(0, -1 * createPageWidth[0]);
+                    positionY.unshift(0, 0);
                 } else if (top > 0) {
-                    createPageWidth.push(firstPageSize.width);
-                    createPageHeight.push(top);
-                    createPageWidth.push(createPageWidth[0]);
-                    createPageHeight.push(firstPageSize.height - top);
+                    createPageWidth.unshift(firstPageSize.width, firstPageSize.width);
+                    createPageHeight.unshift(top, firstPageSize.height - top);
+                    positionX.unshift(0, 0);
+                    positionY.unshift(-1 * createPageHeight[1], 0);
                 } else if (bottom > 0) {
-                    createPageWidth.push(firstPageSize.width);
-                    createPageHeight.push(firstPageSize.height - bottom);
-                    createPageWidth.push(createPageWidth[0]);
-                    createPageHeight.push(bottom);
+                    createPageWidth.push(firstPageSize.width, firstPageSize.width);
+                    createPageHeight.push(firstPageSize.height - bottom, bottom);
+                    positionX.unshift(0, 0);
+                    positionY.unshift(-1 * bottom, 0);
                 }
                 
                 for (let k=0; k<2; k++) {
                     let index;
-                    if (lTor) {
+                    if (lTor.checked) {
                         index = k;
                     } else {
                         if (k==0) {
@@ -325,6 +327,9 @@
                         } else {
                             index = 0;
                         }
+                    }
+                    if (createPageWidth[index] == 0 || createPageHeight[index] == 0) {
+                        continue;
                     }
                     const createPage = mergedPdf.addPage([createPageWidth[index], createPageHeight[index]]);
                 
@@ -337,12 +342,7 @@
                         color: PDFLib.rgb(backgroundColor[0] / 255, backgroundColor[1] / 255, backgroundColor[2] / 255), // 0から1の範囲に変換
                     });
                     
-                    if (index == 0) {
-                        createPage.drawPage(embeddedFirstPage, { x: 0, y: createPageHeight[1] });
-                    } else {
-                        createPage.drawPage(embeddedFirstPage, { x: createPageWidth[0], y: 0 });
-                    }
-                    
+                    createPage.drawPage(embeddedFirstPage, { x: positionX[index], y: positionY[index] });
 
                     // 最大幅を更新
                     if (createPageWidth[index] > maxWidth) {
@@ -360,6 +360,8 @@
                     // ページ高さを配列に追加
                     pageHeights.push(createPageHeight[index]);
                 }
+
+                
             }
 
             // styleタグが2つあるときは下のstyleタグを消す
@@ -447,6 +449,11 @@
         document.querySelectorAll('.padding_trim').forEach(input => {
             input.addEventListener('change', processPdf);
         });
+
+        document.querySelectorAll('.centerDivide').forEach(input => {
+            input.addEventListener('change', processPdf);
+        });
+
 
         // pdf表示切替ボタンのclickイベントリスナーを追加
         document.getElementById('fit-change').addEventListener('click', async () => {
