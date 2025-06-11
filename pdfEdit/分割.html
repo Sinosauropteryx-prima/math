@@ -160,8 +160,8 @@
                 <div class="padding-trim-properties"><p>bottom</p><input type="number" id="bottommm" value="0" class="padding_trim"><p>mm</p><input type="button" class="numberChange" value="▲"><input type="button" class="numberChange" value="▼"></div>
             </div>
             <div class="direction">
-                <label for="lTor">左→右，上→下</label><input type="radio" id="lTor" name="direction" checked>
-                <label for="rTol">右→左，下→上</label><input type="radio" id="rTol" name="direction" class="">
+                <label for="lTor">左→右，上→下</label><input type="radio" id="lTor" name="direction" class="direction-radio" checked>
+                <label for="rTol">右→左，下→上</label><input type="radio" id="rTol" name="direction" class="direction-radio">
             </div>
             <button id="create">分割</button>
         </div>
@@ -178,16 +178,17 @@
     </div>
 
     <script>
+        // PDF.js ワーカーの設定
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js';
+
         // ファイル名を表示する
-        document.querySelectorAll(`.deco-file input[type='file']`).forEach(function() {
-            this.addEventListener('change', function(e) {
-                let parent = e.target.closest('.deco-file');
-                parent.querySelector('.file-names').innerHTML = '';
-                parent.querySelector('.file-names').style.display = 'block';
-                for (file of e.target.files) {
-                    parent.querySelector('.file-names').insertAdjacentHTML('beforeend', file.name + "<br>");
-                }
-            });
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            let parent = e.target.closest('.deco-file');
+            parent.querySelector('.file-names').innerHTML = "";
+            parent.querySelector('.file-names').style.display = 'block';
+            for (file of e.target.files) {
+                parent.querySelector('.file-names').insertAdjacentHTML('beforeend', file.name + "<br>");
+            }
         });
 
         const checkboxes = document.querySelectorAll('.centerDivide');
@@ -232,7 +233,7 @@
             }
 
             const arrayBuffer = await file.arrayBuffer();
-            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
             const pageCount = pdfDoc.getPageCount();
             const mergedPdf = await PDFLib.PDFDocument.create();
 
@@ -388,7 +389,7 @@
             // fit-to-width-iconが表示の時
 
                 //canvasのstyle
-                for (let i = 0; i < pageCount; i++) {
+                for (let i = 0; i < pageCount*2; i++) {
                     style.innerHTML += `
                         .canvas-container canvas:nth-child(${i + 1}) {
                             height: ${(pageHeights[i] / maxHeight) * 100}%; 
@@ -400,7 +401,7 @@
             // fit-to-page-iconが表示の時
 
                 //canvasのstyle
-                for (let i = 0; i < pageCount; i++) {
+                for (let i = 0; i < pageCount*2; i++) {
                     style.innerHTML += `
                         .canvas-container canvas:nth-child(${i + 1}) {
                             width: ${(pageWidths[i] / maxWidth) * 100}%; 
@@ -451,6 +452,10 @@
         });
 
         document.querySelectorAll('.centerDivide').forEach(input => {
+            input.addEventListener('change', processPdf);
+        });
+
+        document.querySelectorAll('.direction-radio').forEach(input => {
             input.addEventListener('change', processPdf);
         });
 
