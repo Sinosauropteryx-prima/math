@@ -264,6 +264,9 @@
             document.getElementById('widthmm').value = width;
             if(document.getElementById('high').checked){
                 document.getElementById('heightmm').value = height;
+            } else if(document.getElementById('lineNumber').checked) {
+                const verticalmm = document.getElementById('verticalmm').valueAsNumber;
+                document.getElementById('heightmm').value = (height - 8.5*2 - verticalmm - 2.5 - (verticalmm + 2.5)*2) / verticalmm + 1;
             }
         }
 
