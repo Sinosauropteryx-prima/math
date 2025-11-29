@@ -260,13 +260,21 @@
         </div>
     </div>
     <script>
+        function highToLine(height) {
+            const verticalmm = document.getElementById('verticalmm').valueAsNumber;
+            return Math.round((height - 8.5*2 - verticalmm - 2.5 - (verticalmm + 2.5)*2) / verticalmm + 1);
+        }
+        function lineToHigh(line) {
+            const verticalmm = document.getElementById('verticalmm').valueAsNumber;
+            return 8.5*2 + verticalmm + 2.5 + (line-1)*verticalmm + (verticalmm + 2.5)*2;
+        }
+
         function setDimensions(width, height) {
             document.getElementById('widthmm').value = width;
             if(document.getElementById('high').checked){
                 document.getElementById('heightmm').value = height;
             } else if(document.getElementById('lineNumber').checked) {
-                const verticalmm = document.getElementById('verticalmm').valueAsNumber;
-                document.getElementById('heightmm').value = (height - 8.5*2 - verticalmm - 2.5 - (verticalmm + 2.5)*2) / verticalmm + 1;
+                document.getElementById('heightmm').value = highToLine(height);
             }
         }
 
@@ -277,7 +285,7 @@
         }
 
         let height = 250;
-        let lineNumber = 52;
+        let lineNumber = 30;
         let heightmm = document.getElementById('heightmm');
 
         function highOrNumber(){
@@ -288,11 +296,13 @@
             if(highornumber[0].checked){ //highがチェックされていたら
                 filedName.textContent = '高さ：';
                 lineNumber = heightmm.value;
+                height = lineToHigh(lineNumber);
                 heightmm.value = height;
                 unit.textContent = 'mm';
             } else if(highornumber[1].checked){ //numberがチェックされていたら
                 filedName.textContent = '行数：';
                 height = heightmm.value;
+                lineNumber = highToLine(height);
                 heightmm.value = lineNumber;
                 unit.textContent = '行';
             }
