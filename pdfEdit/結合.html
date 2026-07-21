@@ -29,7 +29,7 @@
             border-radius: 15px;
             margin-right: 5px;
         }
-        #file-input {
+        #file-input, #file-input-2 {
             display: none;
         }
         .pdfChoose {
@@ -102,8 +102,13 @@
     <h3><a href="https://sinosauropteryx-prima.github.io/math/目次.html">←</a>PDFページ結合</h3>
     
     <div class="deco-file">
-        <input type="file" id="file-input" accept="application/pdf" > <!-- PDFファイルの選択入力 -->
-        <label class="pdfChoose" for="file-input">pdfを選択</label>
+        <input type="file" id="file-input" accept="application/pdf" > <!-- PDFファイルの選択入力1 -->
+        <label class="pdfChoose" for="file-input">1つ目のpdfを選択</label>
+        <p class="file-names"></p>
+    </div>
+    <div class="deco-file" style="margin-top: 10px;">
+        <input type="file" id="file-input-2" accept="application/pdf" > <!-- PDFファイルの選択入力2 -->
+        <label class="pdfChoose" for="file-input-2">2つ目のpdfを選択 (任意)</label>
         <p class="file-names"></p>
     </div>
     <p class="space_page">○ページ間の距離</p>
@@ -126,7 +131,6 @@
         <label for="horizontal">横</label>
     </div>
     
-    
     <button id="merge-button">結合</button> <!-- 結合ボタン -->
     <script>
         //ファイル名を表示する
@@ -145,44 +149,58 @@
             return mm * 2.83465; // 1mm = 2.83465ポイントに変換
         }
 
+        // オプション表示の切り替え
+        async function updateCheckboxVisibility() {
+            const fileInput = document.getElementById('file-input');
+            const fileInput2 = document.getElementById('file-input-2');
+            const file = fileInput.files[0];
+            const file2 = fileInput2.files[0];
+            const container = document.getElementById('checkbox-container');
 
-        document.getElementById('file-input').addEventListener('change', async () => {
-            const fileInput = document.getElementById('file-input'); // ファイル入力要素を取得
-            const file = fileInput.files[0]; // 選択されたファイルを取得
+            if (file && file2) {
+                const arrayBuffer1 = await file.arrayBuffer();
+                const pdfDoc1 = await PDFLib.PDFDocument.load(arrayBuffer1);
+                const pageCount1 = pdfDoc1.getPageCount();
 
-            if (file) {
-                const arrayBuffer = await file.arrayBuffer(); // ファイルをArrayBufferとして読み込む
-                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer); // PDFドキュメントを読み込む
-                const pageCount = pdfDoc.getPageCount(); // ページ数を取得
+                const arrayBuffer2 = await file2.arrayBuffer();
+                const pdfDoc2 = await PDFLib.PDFDocument.load(arrayBuffer2);
+                const pageCount2 = pdfDoc2.getPageCount();
+
+                // 2つのPDFのページ数が異なる場合、足りないページをどう埋めるかのオプションを表示
+                if (pageCount1 !== pageCount2) {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+            } else if (file) {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pageCount = pdfDoc.getPageCount();
 
                 // ページ数が奇数の場合、チェックボックスを表示
                 if (pageCount % 2 === 1) {
-                    document.getElementById('checkbox-container').style.display = 'block'; // チェックボックスを表示
+                    container.style.display = 'block';
                 } else {
-                    document.getElementById('checkbox-container').style.display = 'none'; // チェックボックスを非表示
+                    container.style.display = 'none';
                 }
+            } else {
+                container.style.display = 'none';
             }
-        });
+        }
 
-        // メリッジボタンがクリックされた時の処理
+        document.getElementById('file-input').addEventListener('change', updateCheckboxVisibility);
+        document.getElementById('file-input-2').addEventListener('change', updateCheckboxVisibility);
+
+        // 結合ボタンがクリックされた時の処理
         document.getElementById('merge-button').addEventListener('click', async () => {
             const fileInput = document.getElementById('file-input'); // ファイル入力要素を取得
-            const file = fileInput.files[0]; // 選択されたファイルを取得
+            const fileInput2 = document.getElementById('file-input-2'); // 2つ目のファイル入力要素を取得
+            const file = fileInput.files[0]; // 選択されたファイル1を取得
+            const file2 = fileInput2.files[0]; // 選択されたファイル2を取得
 
             // PDFファイルが選択されていない場合のエラーメッセージ
             if (!file) {
-                alert("PDFファイルを選択してください。"); // 警告ダイアログを表示
-                return; // 処理を中止
-            }
-
-            // PDFを読み込む
-            const arrayBuffer = await file.arrayBuffer(); // ファイルをArrayBufferとして読み込む
-            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer); // PDFドキュメントを読み込む
-            const pageCount = pdfDoc.getPageCount(); // ページ数を取得
-
-            // ページ数が2未満の場合のエラーメッセージ
-            if (pageCount < 2) {
-                alert("選択したPDFには少なくとも2ページが必要です。"); // 警告ダイアログを表示
+                alert("少なくとも1つ目のPDFファイルを選択してください。"); // 警告ダイアログを表示
                 return; // 処理を中止
             }
 
@@ -196,158 +214,252 @@
 
             const verticalChecked = document.getElementById('vertical').checked; // 縦のチェック状態
 
-            // 奇数ページの場合の処理
-            if (pageCount % 2 === 1) {
+            // 2つのPDFが選択されている場合、交互に結合する
+            if (file && file2) {
+                const arrayBuffer1 = await file.arrayBuffer();
+                const pdfDoc1 = await PDFLib.PDFDocument.load(arrayBuffer1);
+                const pageCount1 = pdfDoc1.getPageCount();
 
-                // 最初のページがチェックされた場合
-                if (firstPageChecked) {
-                    const origimalFirstPage = pdfDoc.getPage(0); // 最初のページを取得
-                    const embeddedOriginalFirstPage = await mergedPdf.embedPage(origimalFirstPage); // ページを埋め込む
-                    const originalFirstPageSize = origimalFirstPage.getSize(); // 最初のページのサイズを取得
+                const arrayBuffer2 = await file2.arrayBuffer();
+                const pdfDoc2 = await PDFLib.PDFDocument.load(arrayBuffer2);
+                const pageCount2 = pdfDoc2.getPageCount();
 
-                    // 空白がチェックされている場合
-                    if (blankPageChecked) {
-                        // 空白を含む最初のページを追加
-                        if(verticalChecked){ // 縦がチェックされている場合
-                            const mergedPage = mergedPdf.addPage([orinalFirstPageSize.width, originalFirstPageSize.height*2 + spacePadding]); // マージページを追加
-                            mergedPage.drawPage(embeddedOriginalFirstPage, { x: 0, y: 0 }); // 最初のページを描画
-                        } else { // 横がチェックされている場合
-                            const mergedPage = mergedPdf.addPage([originalFirstPageSize.width*2 + spacePadding, originalFirstPageSize.height]); // マージページを追加
-                            mergedPage.drawPage(embeddedOriginalFirstPage, { x: originalFirstPageSize.width + spacePadding, y: 0 }); // 最初のページを描画
+                const maxPageCount = Math.max(pageCount1, pageCount2);
+
+                for (let i = 0; i < maxPageCount; i++) {
+                    const hasPage1 = i < pageCount1;
+                    const hasPage2 = i < pageCount2;
+
+                    if (hasPage1 && hasPage2) {
+                        const page1 = pdfDoc1.getPage(i);
+                        const embeddedPage1 = await mergedPdf.embedPage(page1);
+                        const pageSize1 = page1.getSize();
+
+                        const page2 = pdfDoc2.getPage(i);
+                        const embeddedPage2 = await mergedPdf.embedPage(page2);
+                        const pageSize2 = page2.getSize();
+
+                        if (verticalChecked) { // 縦に結合
+                            const mergedWidth = Math.max(pageSize1.width, pageSize2.width);
+                            const mergedHeight = pageSize1.height + spacePadding + pageSize2.height;
+                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]);
+
+                            const page1X = (mergedWidth - pageSize1.width) / 2;
+                            mergedPage.drawPage(embeddedPage1, { x: page1X, y: pageSize2.height + spacePadding });
+
+                            const page2X = (mergedWidth - pageSize2.width) / 2;
+                            mergedPage.drawPage(embeddedPage2, { x: page2X, y: 0 });
+                        } else { // 横に結合
+                            const mergedWidth = pageSize1.width + spacePadding + pageSize2.width;
+                            const mergedHeight = Math.max(pageSize1.height, pageSize2.height);
+                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]);
+
+                            const page1Y = (mergedHeight - pageSize1.height) / 2;
+                            mergedPage.drawPage(embeddedPage1, { x: 0, y: page1Y });
+
+                            const page2Y = (mergedHeight - pageSize2.height) / 2;
+                            mergedPage.drawPage(embeddedPage2, { x: pageSize1.width + spacePadding, y: page2Y });
                         }
-                    } else {
-                        // 最初のページを追加
-                        const mergedPage = mergedPdf.addPage([originalFirstPageSize.width, originalFirstPageSize.height]); // マージページを追加
-                        mergedPage.drawPage(embeddedOriginalFirstPage, { x: 0, y: 0 }); // 最初のページを描画
-                    }
+                    } else if (hasPage1) { // 1つ目のPDFのみページが存在する場合
+                        const page1 = pdfDoc1.getPage(i);
+                        const embeddedPage1 = await mergedPdf.embedPage(page1);
+                        const pageSize1 = page1.getSize();
 
-                    // 最初のページを除き、それ以降を2枚ずつ結合
-                    for (let i = 1; i < pageCount; i += 2) {
-                        const firstPage = pdfDoc.getPage(i); // 現在のページを取得
-                        const embeddedFirstPage = await mergedPdf.embedPage(firstPage); // ページを埋め込む
-                        const firstPageSize = firstPage.getSize(); // 現在のページのサイズを取得
-
-                        const secondPage = pdfDoc.getPage(i + 1); // 次のページを取得
-                        const embeddedSecondPage = await mergedPdf.embedPage(secondPage); // ページを埋め込む
-                        const secondPageSize = secondPage.getSize(); // 次のページのサイズを取得
-
-                        if(verticalChecked){ // 縦がチェックされている場合
-                            const mergedWidth = Math.max(firstPageSize.width, secondPageSize.width); // マージページの幅を計算
-                            const mergedHeight = firstPageSize.height + spacePadding + secondPageSize.height; // マージページの高さを計算
-                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
-
-                            // 各ページのX座標を計算して中央に配置
-                            const firstPageX = (mergedWidth - firstPageSize.width) / 2; // 最初のページのX座標を計算
-                            mergedPage.drawPage(embeddedFirstPage, { x: firstPageX, y: secondPageSize.height + spacePadding }); // 最初のページを描画
-
-                            const secondPageX = (mergedWidth - secondPageSize.width) / 2; // 次のページのX座標を計算
-                            mergedPage.drawPage(embeddedSecondPage, { x: secondPageX, y: 0 }); // 次のページを描画
-                        } else { // 横がチェックされている場合
-                            const mergedWidth = firstPageSize.width + spacePadding + secondPageSize.width; // マージページの幅を計算
-                            const mergedHeight = Math.max(firstPageSize.height, secondPageSize.height); // マージページの高さを計算
-                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
-
-                            // 各ページのY座標を計算して中央に配置
-                            const firstPageY = (mergedHeight - firstPageSize.height) / 2; // 最初のページのY座標を計算
-                            mergedPage.drawPage(embeddedFirstPage, { x: 0, y: firstPageY }); // 最初のページを描画
-
-                            const secondPageY = (mergedHeight - secondPageSize.height) / 2; // 次のページのY座標を計算
-                            mergedPage.drawPage(embeddedSecondPage, { x: firstPageSize.width + spacePadding, y: secondPageY }); // 次のページを描画
+                        if (blankPageChecked) { // 空白と結合
+                            if (verticalChecked) {
+                                const mergedPage = mergedPdf.addPage([pageSize1.width, pageSize1.height * 2 + spacePadding]);
+                                mergedPage.drawPage(embeddedPage1, { x: 0, y: pageSize1.height + spacePadding });
+                            } else {
+                                const mergedPage = mergedPdf.addPage([pageSize1.width * 2 + spacePadding, pageSize1.height]);
+                                mergedPage.drawPage(embeddedPage1, { x: 0, y: 0 });
+                            }
+                        } else { // 単独で表示
+                            const mergedPage = mergedPdf.addPage([pageSize1.width, pageSize1.height]);
+                            mergedPage.drawPage(embeddedPage1, { x: 0, y: 0 });
                         }
-                    }
-                } 
-                // 最後のページがチェックされた場合
-                else if (lastPageChecked) {
-                    // 2ページずつ結合
-                    for (let i = 0; i < pageCount - 1; i += 2) {
-                        const firstPage = pdfDoc.getPage(i); // 現在のページを取得
-                        const embeddedFirstPage = await mergedPdf.embedPage(firstPage); // ページを埋め込む
-                        const firstPageSize = firstPage.getSize(); // 現在のページのサイズを取得
+                    } else if (hasPage2) { // 2つ目のPDFのみページが存在する場合
+                        const page2 = pdfDoc2.getPage(i);
+                        const embeddedPage2 = await mergedPdf.embedPage(page2);
+                        const pageSize2 = page2.getSize();
 
-                        const secondPage = pdfDoc.getPage(i + 1); // 次のページを取得
-                        const embeddedSecondPage = await mergedPdf.embedPage(secondPage); // ページを埋め込む
-                        const secondPageSize = secondPage.getSize(); // 次のページのサイズを取得
-
-                        if(verticalChecked){ // 縦がチェックされている場合
-                            const mergedWidth = Math.max(firstPageSize.width, secondPageSize.width); // マージページの幅を計算
-                            const mergedHeight = firstPageSize.height + spacePadding + secondPageSize.height; // マージページの高さを計算
-                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
-
-                            // 各ページのX座標を計算して中央に配置
-                            const firstPageX = (mergedWidth - firstPageSize.width) / 2; // 最初のページのX座標を計算
-                            mergedPage.drawPage(embeddedFirstPage, { x: firstPageX, y: secondPageSize.height + spacePadding }); // 最初のページを描画
-
-                            const secondPageX = (mergedWidth - secondPageSize.width) / 2; // 次のページのX座標を計算
-                            mergedPage.drawPage(embeddedSecondPage, { x: secondPageX, y: 0 }); // 次のページを描画
-                        } else { // 横がチェックされている場合
-                            const mergedWidth = firstPageSize.width + spacePadding + secondPageSize.width; // マージページの幅を計算
-                            const mergedHeight = Math.max(firstPageSize.height, secondPageSize.height); // マージページの高さを計算
-                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
-
-                            // 各ページのY座標を計算して中央に配置
-                            const firstPageY = (mergedHeight - firstPageSize.height) / 2; // 最初のページのY座標を計算
-                            mergedPage.drawPage(embeddedFirstPage, { x: 0, y: firstPageY }); // 最初のページを描画
-
-                            const secondPageY = (mergedHeight - secondPageSize.height) / 2; // 次のページのY座標を計算
-                            mergedPage.drawPage(embeddedSecondPage, { x: firstPageSize.width + spacePadding, y: secondPageY }); // 次のページを描画
+                        if (blankPageChecked) { // 空白と結合
+                            if (verticalChecked) {
+                                const mergedPage = mergedPdf.addPage([pageSize2.width, pageSize2.height * 2 + spacePadding]);
+                                mergedPage.drawPage(embeddedPage2, { x: 0, y: 0 });
+                            } else {
+                                const mergedPage = mergedPdf.addPage([pageSize2.width * 2 + spacePadding, pageSize2.height]);
+                                mergedPage.drawPage(embeddedPage2, { x: pageSize2.width + spacePadding, y: 0 });
+                            }
+                        } else { // 単独で表示
+                            const mergedPage = mergedPdf.addPage([pageSize2.width, pageSize2.height]);
+                            mergedPage.drawPage(embeddedPage2, { x: 0, y: 0 });
                         }
                     }
-
-                    
-                    const lastPage = pdfDoc.getPage(pageCount - 1); // 最後のページを取得
-                    const embeddedLastPage = await mergedPdf.embedPage(lastPage); // 最後のページを埋め込む
-                    const lastPageSize = lastPage.getSize(); // 最後のページのサイズを取得
-
-                    // 空白がチェックされている場合
-                    if (blankPageChecked) {
-                        // 空白を含む最後のページを追加
-                        if(verticalChecked){ // 縦がチェックされている場合
-                            const mergedPage = mergedPdf.addPage([lastPageSize.width, lastPageSize.height*2 + spacePadding]); // 最後のページを追加
-                            mergedPage.drawPage(embeddedLastPage, { x: 0, y: 0 }); // 最後のページを描画
-                        } else { // 横がチェックされている場合
-                            const mergedPage = mergedPdf.addPage([lastPageSize.width*2 + spacePadding, lastPageSize.height]); // 最後のページを追加
-                            mergedPage.drawPage(embeddedLastPage, { x: 0, y: 0 }); // 最後のページを描画
-                        }
-                    } else {
-                        // 最後のページを追加
-                        const mergedPage = mergedPdf.addPage([lastPageSize.width, lastPageSize.height]); // 最後のページを追加
-                        mergedPage.drawPage(embeddedLastPage, { x: 0, y: 0 }); // 最後のページを描画
-                    }
-
                 }
             } else {
-                // 偶数ページの場合、全ページを2枚ずつ結合
-                for (let i = 0; i < pageCount; i += 2) {
-                    const firstPage = pdfDoc.getPage(i); // 現在のページを取得
-                    const embeddedFirstPage = await mergedPdf.embedPage(firstPage); // ページを埋め込む
-                    const firstPageSize = firstPage.getSize(); // 現在のページのサイズを取得
+                // 1つのPDFが選択されている場合（従来通りの処理）
+                const arrayBuffer = await file.arrayBuffer(); // ファイルをArrayBufferとして読み込む
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer); // PDFドキュメントを読み込む
+                const pageCount = pdfDoc.getPageCount(); // ページ数を取得
 
-                    const secondPage = pdfDoc.getPage(i + 1); // 次のページを取得
-                    const embeddedSecondPage = await mergedPdf.embedPage(secondPage); // ページを埋め込む
-                    const secondPageSize = secondPage.getSize(); // 次のページのサイズを取得
+                // ページ数が2未満の場合のエラーメッセージ
+                if (pageCount < 2) {
+                    alert("選択したPDFには少なくとも2ページが必要です。"); // 警告ダイアログを表示
+                    return; // 処理を中止
+                }
 
-                    if(verticalChecked){ // 縦がチェックされている場合
-                        const mergedWidth = Math.max(firstPageSize.width, secondPageSize.width); // マージページの幅を計算
-                        const mergedHeight = firstPageSize.height + spacePadding + secondPageSize.height; // マージページの高さを計算
-                        const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+                // 奇数ページの場合の処理
+                if (pageCount % 2 === 1) {
 
-                        // 各ページのX座標を計算して中央に配置
-                        const firstPageX = (mergedWidth - firstPageSize.width) / 2; // 最初のページのX座標を計算
-                        mergedPage.drawPage(embeddedFirstPage, { x: firstPageX, y: secondPageSize.height + spacePadding }); // 最初のページを描画
+                    // 最初のページがチェックされた場合
+                    if (firstPageChecked) {
+                        const originalFirstPage = pdfDoc.getPage(0); // 最初のページを取得
+                        const embeddedOriginalFirstPage = await mergedPdf.embedPage(originalFirstPage); // ページを埋め込む
+                        const originalFirstPageSize = originalFirstPage.getSize(); // 最初のページのサイズを取得
 
-                        const secondPageX = (mergedWidth - secondPageSize.width) / 2; // 次のページのX座標を計算
-                        mergedPage.drawPage(embeddedSecondPage, { x: secondPageX, y: 0 }); // 次のページを描画
-                    } else { // 横がチェックされている場合
-                        const mergedWidth = firstPageSize.width + spacePadding + secondPageSize.width; // マージページの幅を計算
-                        const mergedHeight = Math.max(firstPageSize.height, secondPageSize.height); // マージページの高さを計算
-                        const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+                        // 空白がチェックされている場合
+                        if (blankPageChecked) {
+                            // 空白を含む最初のページを追加
+                            if(verticalChecked){ // 縦がチェックされている場合
+                                const mergedPage = mergedPdf.addPage([originalFirstPageSize.width, originalFirstPageSize.height*2 + spacePadding]); // マージページを追加
+                                mergedPage.drawPage(embeddedOriginalFirstPage, { x: 0, y: 0 }); // 最初のページを描画
+                            } else { // 横がチェックされている場合
+                                const mergedPage = mergedPdf.addPage([originalFirstPageSize.width*2 + spacePadding, originalFirstPageSize.height]); // マージページを追加
+                                mergedPage.drawPage(embeddedOriginalFirstPage, { x: originalFirstPageSize.width + spacePadding, y: 0 }); // 最初のページを描画
+                            }
+                        } else {
+                            // 最初のページを追加
+                            const mergedPage = mergedPdf.addPage([originalFirstPageSize.width, originalFirstPageSize.height]); // マージページを追加
+                            mergedPage.drawPage(embeddedOriginalFirstPage, { x: 0, y: 0 }); // 最初のページを描画
+                        }
 
-                        // 各ページのY座標を計算して中央に配置
-                        const firstPageY = (mergedHeight - firstPageSize.height) / 2; // 最初のページのY座標を計算
-                        mergedPage.drawPage(embeddedFirstPage, { x: 0, y: firstPageY }); // 最初のページを描画
+                        // 最初のページを除き、それ以降を2枚ずつ結合
+                        for (let i = 1; i < pageCount; i += 2) {
+                            const firstPage = pdfDoc.getPage(i); // 現在のページを取得
+                            const embeddedFirstPage = await mergedPdf.embedPage(firstPage); // ページを埋め込む
+                            const firstPageSize = firstPage.getSize(); // 現在のページのサイズを取得
 
-                        const secondPageY = (mergedHeight - secondPageSize.height) / 2; // 次のページのY座標を計算
-                        mergedPage.drawPage(embeddedSecondPage, { x: firstPageSize.width + spacePadding, y: secondPageY }); // 次のページを描画
+                            const secondPage = pdfDoc.getPage(i + 1); // 次のページを取得
+                            const embeddedSecondPage = await mergedPdf.embedPage(secondPage); // ページを埋め込む
+                            const secondPageSize = secondPage.getSize(); // 次のページのサイズを取得
+
+                            if(verticalChecked){ // 縦がチェックされている場合
+                                const mergedWidth = Math.max(firstPageSize.width, secondPageSize.width); // マージページの幅を計算
+                                const mergedHeight = firstPageSize.height + spacePadding + secondPageSize.height; // マージページの高さを計算
+                                const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+
+                                // 各ページのX座標を計算して中央に配置
+                                const firstPageX = (mergedWidth - firstPageSize.width) / 2; // 最初のページのX座標を計算
+                                mergedPage.drawPage(embeddedFirstPage, { x: firstPageX, y: secondPageSize.height + spacePadding }); // 最初のページを描画
+
+                                const secondPageX = (mergedWidth - secondPageSize.width) / 2; // 次のページのX座標を計算
+                                mergedPage.drawPage(embeddedSecondPage, { x: secondPageX, y: 0 }); // 次のページを描画
+                            } else { // 横がチェックされている場合
+                                const mergedWidth = firstPageSize.width + spacePadding + secondPageSize.width; // マージページの幅を計算
+                                const mergedHeight = Math.max(firstPageSize.height, secondPageSize.height); // マージページの高さを計算
+                                const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+
+                                // 各ページのY座標を計算して中央に配置
+                                const firstPageY = (mergedHeight - firstPageSize.height) / 2; // 最初のページのY座標を計算
+                                mergedPage.drawPage(embeddedFirstPage, { x: 0, y: firstPageY }); // 最初のページを描画
+
+                                const secondPageY = (mergedHeight - secondPageSize.height) / 2; // 次のページのY座標を計算
+                                mergedPage.drawPage(embeddedSecondPage, { x: firstPageSize.width + spacePadding, y: secondPageY }); // 次のページを描画
+                            }
+                        }
+                    } 
+                    // 最後のページがチェックされた場合
+                    else if (lastPageChecked) {
+                        // 2ページずつ結合
+                        for (let i = 0; i < pageCount - 1; i += 2) {
+                            const firstPage = pdfDoc.getPage(i); // 現在のページを取得
+                            const embeddedFirstPage = await mergedPdf.embedPage(firstPage); // ページを埋め込む
+                            const firstPageSize = firstPage.getSize(); // 現在のページのサイズを取得
+
+                            const secondPage = pdfDoc.getPage(i + 1); // 次のページを取得
+                            const embeddedSecondPage = await mergedPdf.embedPage(secondPage); // ページを埋め込む
+                            const secondPageSize = secondPage.getSize(); // 次のページのサイズを取得
+
+                            if(verticalChecked){ // 縦がチェックされている場合
+                                const mergedWidth = Math.max(firstPageSize.width, secondPageSize.width); // マージページの幅を計算
+                                const mergedHeight = firstPageSize.height + spacePadding + secondPageSize.height; // マージページの高さを計算
+                                const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+
+                                // 各ページのX座標を計算して中央に配置
+                                const firstPageX = (mergedWidth - firstPageSize.width) / 2; // 最初のページのX座標を計算
+                                mergedPage.drawPage(embeddedFirstPage, { x: firstPageX, y: secondPageSize.height + spacePadding }); // 最初のページを描画
+
+                                const secondPageX = (mergedWidth - secondPageSize.width) / 2; // 次のページのX座標を計算
+                                mergedPage.drawPage(embeddedSecondPage, { x: secondPageX, y: 0 }); // 次のページを描画
+                            } else { // 横がチェックされている場合
+                                const mergedWidth = firstPageSize.width + spacePadding + secondPageSize.width; // マージページの幅を計算
+                                const mergedHeight = Math.max(firstPageSize.height, secondPageSize.height); // マージページの高さを計算
+                                const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+
+                                // 各ページのY座標を計算して中央に配置
+                                const firstPageY = (mergedHeight - firstPageSize.height) / 2; // 最初のページのY座標を計算
+                                mergedPage.drawPage(embeddedFirstPage, { x: 0, y: firstPageY }); // 最初のページを描画
+
+                                const secondPageY = (mergedHeight - secondPageSize.height) / 2; // 次のページのY座標を計算
+                                mergedPage.drawPage(embeddedSecondPage, { x: firstPageSize.width + spacePadding, y: secondPageY }); // 次のページを描画
+                            }
+                        }
+
+                        const lastPage = pdfDoc.getPage(pageCount - 1); // 最後のページを取得
+                        const embeddedLastPage = await mergedPdf.embedPage(lastPage); // 最後のページを埋め込む
+                        const lastPageSize = lastPage.getSize(); // 最後のページのサイズを取得
+
+                        // 空白がチェックされている場合
+                        if (blankPageChecked) {
+                            // 空白を含む最後のページを追加
+                            if(verticalChecked){ // 縦がチェックされている場合
+                                const mergedPage = mergedPdf.addPage([lastPageSize.width, lastPageSize.height*2 + spacePadding]); // 最後のページを追加
+                                mergedPage.drawPage(embeddedLastPage, { x: 0, y: 0 }); // 最後のページを描画
+                            } else { // 横がチェックされている場合
+                                const mergedPage = mergedPdf.addPage([lastPageSize.width*2 + spacePadding, lastPageSize.height]); // 最後のページを追加
+                                mergedPage.drawPage(embeddedLastPage, { x: 0, y: 0 }); // 最後のページを描画
+                            }
+                        } else {
+                            // 最後のページを追加
+                            const mergedPage = mergedPdf.addPage([lastPageSize.width, lastPageSize.height]); // 最後のページを追加
+                            mergedPage.drawPage(embeddedLastPage, { x: 0, y: 0 }); // 最後のページを描画
+                        }
+
+                    }
+                } else {
+                    // 偶数ページの場合、全ページを2枚ずつ結合
+                    for (let i = 0; i < pageCount; i += 2) {
+                        const firstPage = pdfDoc.getPage(i); // 現在のページを取得
+                        const embeddedFirstPage = await mergedPdf.embedPage(firstPage); // ページを埋め込む
+                        const firstPageSize = firstPage.getSize(); // 現在のページのサイズを取得
+
+                        const secondPage = pdfDoc.getPage(i + 1); // 次のページを取得
+                        const embeddedSecondPage = await mergedPdf.embedPage(secondPage); // ページを埋め込む
+                        const secondPageSize = secondPage.getSize(); // 次のページのサイズを取得
+
+                        if(verticalChecked){ // 縦がチェックされている場合
+                            const mergedWidth = Math.max(firstPageSize.width, secondPageSize.width); // マージページの幅を計算
+                            const mergedHeight = firstPageSize.height + spacePadding + secondPageSize.height; // マージページの高さを計算
+                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+
+                            // 各ページのX座標を計算して中央に配置
+                            const firstPageX = (mergedWidth - firstPageSize.width) / 2; // 最初のページのX座標を計算
+                            mergedPage.drawPage(embeddedFirstPage, { x: firstPageX, y: secondPageSize.height + spacePadding }); // 最初のページを描画
+
+                            const secondPageX = (mergedWidth - secondPageSize.width) / 2; // 次のページのX座標を計算
+                            mergedPage.drawPage(embeddedSecondPage, { x: secondPageX, y: 0 }); // 次のページを描画
+                        } else { // 横がチェックされている場合
+                            const mergedWidth = firstPageSize.width + spacePadding + secondPageSize.width; // マージページの幅を計算
+                            const mergedHeight = Math.max(firstPageSize.height, secondPageSize.height); // マージページの高さを計算
+                            const mergedPage = mergedPdf.addPage([mergedWidth, mergedHeight]); // マージページを追加
+
+                            // 各ページのY座標を計算して中央に配置
+                            const firstPageY = (mergedHeight - firstPageSize.height) / 2; // 最初のページのY座標を計算
+                            mergedPage.drawPage(embeddedFirstPage, { x: 0, y: firstPageY }); // 最初のページを描画
+
+                            const secondPageY = (mergedHeight - secondPageSize.height) / 2; // 次のページのY座標を計算
+                            mergedPage.drawPage(embeddedSecondPage, { x: firstPageSize.width + spacePadding, y: secondPageY }); // 次のページを描画
+                        }
                     }
                 }
             }
